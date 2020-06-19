@@ -9,8 +9,11 @@ class GitRepo(object):
         self.clone_commands = {}
         self.repo: Repo
 
-    def set_depth(self, depth):
+    def set_depth(self, depth: int) -> 'GitRepo':
         self.clone_commands.update({"depth": depth})
+        return self
+
+    def __enter__(self):
         return self
 
     def clone(self):
@@ -19,9 +22,14 @@ class GitRepo(object):
             self.repo = Repo.clone_from(self.url, self.target_dir, **self.clone_commands)
         except:
             self.repo = Repo(self.target_dir)
-            print("repo already exists...")
-        
+
         return self
+
+    def __exit__(self, ctx_type, ctx_value, ctx_traceback):
+        self.close()
+
+    def close(self):
+        self.repo.close()
 
     def get_project_directory(self):
         return self.target_dir

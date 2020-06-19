@@ -20,6 +20,17 @@ def parse_arguments():
 
     return parser.parse_args()
 
+def start(project_url, project_path, output_path, tacoco_path):
+    with GitRepo(project_url, project_path).set_depth(1).clone() as repo:
+        runner = TacocoRunner(repo, output_path, tacoco_path)
+
+        build_output = runner.build()
+
+        if build_output == 0:
+            runner.run()
+
+        print("[ERROR] build failure...")
+
 def main():
     print("Start analysis...")
     arguments = parse_arguments()
@@ -38,11 +49,4 @@ def main():
         tacoco_path = config["TACOCO_HOME"]
         output_path = config["OUTPUT_DIR"]
 
-    repo = GitRepo(project_url, project_path)\
-        .set_depth(1)\
-        .clone()
-
-    runner = TacocoRunner(repo, output_path, tacoco_path)
-
-    runner.build()
-    runner.run()
+    start(project_url, project_path, output_path, tacoco_path)
