@@ -1,11 +1,11 @@
 from git import Repo
+import tempfile
+import shutil
 import os
 
 class GitRepo(object):
-    def __init__(self, url: str, target_dir: str):
+    def __init__(self, url: str):
         self.url = url
-        self.target_dir = target_dir
-
         self.clone_commands = {}
         self.repo: Repo
 
@@ -14,9 +14,11 @@ class GitRepo(object):
         return self
 
     def __enter__(self):
+        self.target_dir = tempfile.mkdtemp()
+        self._clone()
         return self
 
-    def clone(self):
+    def _clone(self):
         try:
             # ToDo: clone in temporary directory and remove automatically.
             self.repo = Repo.clone_from(self.url, self.target_dir, **self.clone_commands)
@@ -27,6 +29,7 @@ class GitRepo(object):
 
     def __exit__(self, ctx_type, ctx_value, ctx_traceback):
         self.close()
+        shutil.rmtree(self.target_dir)
 
     def close(self):
         self.repo.close()
