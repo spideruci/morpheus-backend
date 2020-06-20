@@ -29,7 +29,7 @@ class TacocoRunner():
         p = Popen(["rm", "tacoco.cp"], cwd=self.project_path)
         p.wait()
         # TODO Make use of the tacoco build capabilities...
-        p = Popen(["mvn", "clean", "compile", "test-compile", '-Dmaven.compiler.source=11', '-Dmaven.compiler.target=11'], cwd=self.project_path)
+        p = Popen(["mvn", "clean", "compile", "test-compile"], cwd=self.project_path)
         return p.wait()
 
     def run(self):
