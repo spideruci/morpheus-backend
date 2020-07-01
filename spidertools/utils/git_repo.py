@@ -20,7 +20,6 @@ class GitRepo(object):
 
     def _clone(self):
         try:
-            # ToDo: clone in temporary directory and remove automatically.
             self.repo = Repo.clone_from(self.url, self.target_dir, **self.clone_commands)
         except:
             self.repo = Repo(self.target_dir)
@@ -43,9 +42,12 @@ class GitRepo(object):
     def get_current_commit(self):
         return self.repo.head.object.hexsha
 
-
     def __get_project_name(self):
-        project_name = self.target_dir.split(os.path.sep)[-1]
+        url = self.url
+        if self.url.endswith('.git'):
+            url = self.url[:-4]
+
+        project_name = self.url.split(os.path.sep)[-1]
         if project_name == "":
             return self.target_dir.split(os.path.sep)[-2]
         else:
