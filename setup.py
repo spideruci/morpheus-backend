@@ -13,11 +13,13 @@ setup(
     long_description=open('README.md').read(),
     install_requires = [
         'GitPython==3.1.3',
-        'pyyaml==5.3.1'
+        'pyyaml==5.3.1', 
+        'numpy==1.19.0'
     ],
     entry_points = {
         'console_scripts': [
             'tacoco-runner=spidertools.runners.tacoco_cli:main',
+            'pluperfect=spidertools.runners.pluperfect_cli:main',
         ]
     }
 )
