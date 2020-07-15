@@ -2,6 +2,7 @@ from git import Repo, Tag, Git
 import tempfile
 import shutil
 import os
+from subprocess import Popen
 
 class GitRepo(object):
     def __init__(self, url: str):
@@ -29,6 +30,10 @@ class GitRepo(object):
     def __exit__(self, ctx_type, ctx_value, ctx_traceback):
         self.close()
         shutil.rmtree(self.target_dir)
+
+    def clean(self):
+        p = Popen(["git", "clean", "-fxd"], cwd=self.target_dir)
+        return p.wait()
 
     def close(self):
         self.repo.close()

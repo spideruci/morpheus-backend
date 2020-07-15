@@ -11,16 +11,19 @@ def parse_arguments():
     """
     parser = argparse.ArgumentParser(description='Run Tacoco')
 
+    # TODO: Add option to switch between number of releases and number of commits
     parser.add_argument('project_url', type=str,
                         help="Absolute path to system-under-test's root.")
-
     parser.add_argument('--output_path', type=str, help="absolute path to output directory")
-    # parser.add_argument('--tacoco_path', type=str, help="absolute path to tacoco")
     parser.add_argument('--config', type=str, help="absolute path to tacoco")
 
     return parser.parse_args()
 
 def analysis(repo, output_path, tacoco_runner, parser_runner):
+    # Before each analysis remove all generated files of previous run
+    repo.clean()
+
+    # Start analysis
     build_output = tacoco_runner.build()
 
     if build_output == 1:
@@ -45,6 +48,7 @@ def start(project_url, output_path, tacoco_path, history_slider_path):
         parser_runner = MethodParserRunner(repo, output_path, history_slider_path)
 
         for commit in repo.iterate_tagged_commits(5):
+            print(commit)
             analysis(repo, output_path, tacoco_runner, parser_runner)
 
 def main():
