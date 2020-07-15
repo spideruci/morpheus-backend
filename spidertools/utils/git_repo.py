@@ -61,7 +61,7 @@ class GitRepo(object):
     def iterate_tagged_commits(self, max_commits=-1) -> Tag:
         git: Git = self.repo.git
 
-        for i, tag in enumerate(self.repo.tags):
+        for i, tag in enumerate(reversed(self.repo.tags)):
             git.checkout(tag)
             yield tag
 
