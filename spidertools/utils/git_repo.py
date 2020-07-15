@@ -1,4 +1,4 @@
-from git import Repo
+from git import Repo, Tag, Git
 import tempfile
 import shutil
 import os
@@ -53,3 +53,12 @@ class GitRepo(object):
         else:
             return project_name
 
+    def iterate_tagged_commits(self, max_commits=-1) -> Tag:
+        git: Git = self.repo.git
+
+        for i, tag in enumerate(self.repo.tags):
+            git.checkout(tag)
+            yield tag
+
+            if max_commits == i:
+                break

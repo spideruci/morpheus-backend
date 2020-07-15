@@ -20,28 +20,32 @@ def parse_arguments():
 
     return parser.parse_args()
 
+def analysis(repo, output_path, tacoco_runner, parser_runner):
+    build_output = tacoco_runner.build()
+
+    if build_output == 1:
+        print("[ERROR] build failure...")
+    else:
+        parser_runner.run()
+        tacoco_runner.run()
+
+        # Combine data
+        commit_sha = repo.get_current_commit()
+        project_output_path = f"{output_path}{os.path.sep}{repo.get_project_name()}{os.path.sep}"
+        coverage_json(
+            f"{project_output_path}methods-{commit_sha}.json",
+            f"{project_output_path}{commit_sha}-cov-matrix.json",
+            f"{project_output_path}{commit_sha}-combined.json",
+            commit_sha
+        )
+
 def start(project_url, output_path, tacoco_path, history_slider_path):
     with GitRepo(project_url) as repo:
         tacoco_runner = TacocoRunner(repo, output_path, tacoco_path)
         parser_runner = MethodParserRunner(repo, output_path, history_slider_path)
 
-        build_output = tacoco_runner.build()
-
-        if build_output == 1:
-            print("[ERROR] build failure...")
-        else:
-            parser_runner.run()
-            tacoco_runner.run()
-
-            # Combine data
-            commit_sha = repo.get_current_commit()
-            project_output_path = f"{output_path}{os.path.sep}{repo.get_project_name()}{os.path.sep}"
-            coverage_json(
-                f"{project_output_path}methods-{commit_sha}.json",
-                f"{project_output_path}{commit_sha}-cov-matrix.json",
-                f"{project_output_path}{commit_sha}-combined.json",
-                commit_sha
-            )
+        for commit in repo.iterate_tagged_commits(5):
+            analysis(repo, output_path, tacoco_runner, parser_runner)
 
 def main():
     print("Start analysis...")
