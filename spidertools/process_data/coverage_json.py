@@ -59,6 +59,4 @@ def coverage_json(methods_path, coverage_path, output_path, commit_sha):
         }
     }
 
-    with open(output_path, 'w') as json_file:
-        json.dump(output, json_file, indent=4)
-        json_file.flush()
+    return output
