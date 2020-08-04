@@ -70,7 +70,7 @@ class BuildTableHandler(TableHandler):
 
         CREATE_TABLE = """
         CREATE TABLE IF NOT EXISTS BuildResults (
-            commit_id INT,
+            commit_id INTEGER,
             build_passed BOOLEAN,
             FOREIGN KEY ( commit_id ) REFERENCES Commits( commit_id ),
             PRIMARY KEY ( commit_id )
@@ -82,11 +82,67 @@ class BuildTableHandler(TableHandler):
     def add_build_result(self, commit_id: int, build_passed: bool):
         self.insert('''INSERT INTO BuildResults( commit_id, build_passed ) VALUES (?, ?) ''', (commit_id, build_passed))
 
-class MethodCoverageTableHandler(TableHandler):
-    pass
+class ProductionMethodTableHandler(TableHandler):
+    def __init__(self, database_location):
+        super().__init__(database_location)
+
+        CREATE_TABLE = """
+        CREATE TABLE IF NOT EXISTS ProductionMethods (
+            method_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            method_name TEXT,
+            class_name TEXT,
+            package_name TEXT,
+            commit_id INTEGER,
+            FOREIGN KEY ( commit_id ) REFERENCES Commits( commit_id )
+        );
+        """
+        self.create(CREATE_TABLE)
+
+    def add_production_method(self, method_name: str, class_name: str, package_name: str, commit_id: int):
+        self.insert('''INSERT INTO ProductionMethods( method_name, class_name, package_name, commit_id ) VALUES (?, ?, ?, ?) ''', (method_name, class_name, package_name, commit_id))
+
+    def get_method_id(self, method_name, class_name, package_name, commit_id):
+        return self.select('''
+            SELECT method_id FROM Commits 
+            WHERE method_name=? 
+            AND class_name=?
+            AND package_name=?
+            AND commit_id=?
+        
+        ''', (method_name, class_name, package_name, commit_id))[0] 
 
 class TestMethodTableHandler(TableHandler):
-    pass
+    def __init__(self, database_location):
+        super().__init__(database_location)
 
-class ProductionMethodTableHandler(TableHandler):
-    pass
+        CREATE_TABLE = """
+        CREATE TABLE IF NOT EXISTS TestMethods (
+            commit_id INTEGER,
+            test_id INTEGER,
+            test_name TEXT,
+            FOREIGN KEY ( commit_id ) REFERENCES Commits( commit_id )
+            PRIMARY KEY (commit_id, test_id)
+        );
+        """
+        self.create(CREATE_TABLE)
+
+    def add_test_method(self, test_id: int, test_name: str, commit_id: int):
+        self.insert('''INSERT INTO TestMethods( test_id, test_name, commit_id ) VALUES (?, ?, ?) ''', (test_id, test_name, commit_id))
+
+
+class MethodCoverageTableHandler(TableHandler):
+        def __init__(self, database_location):
+            super().__init__(database_location)
+
+            CREATE_TABLE = """
+            CREATE TABLE IF NOT EXISTS MethodCoverage (
+                method_id INTEGER,
+                test_id INTEGER,
+                commit_id TEXT,
+                FOREIGN KEY ( commit_id ) REFERENCES Commits( commit_id ),
+                FOREIGN KEY ( test_id ) REFERENCES Commits( commit_id ),
+                FOREIGN KEY ( method_id ) REFERENCES Commits( commit_id ),
+                PRIMARY KEY (method_id, test_id, commit_id)
+            );
+            """
+            self.create(CREATE_TABLE)
