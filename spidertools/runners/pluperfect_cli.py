@@ -25,9 +25,9 @@ def start(project_url, output_path, tacoco_path, history_slider_path):
         tacoco_runner = TacocoRunner(repo, output_path, tacoco_path)
         parser_runner = MethodParserRunner(repo, output_path, history_slider_path)
 
-        # for commit in repo.iterate_tagged_commits(5):
-        #     print(commit, repo.get_current_commit())
-        _analysis(repo, tacoco_runner, parser_runner, output_path)
+        for commit in repo.iterate_tagged_commits(5):
+            print(commit, repo.get_current_commit())
+            _analysis(repo, tacoco_runner, parser_runner, output_path)
 
 def _analysis(repo, tacoco_runner, parser_runner, output_path):
     # Before each analysis remove all generated files of previous run
