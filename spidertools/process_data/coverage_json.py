@@ -23,7 +23,7 @@ def open_json_file(path: str):
 def parse_test_method(test_method : str):
     try:
         class_name = re.search(r'runner:([a-zA-Z._()]+)', test_method).group(1)
-        method_name = re.search(r'test:([a-zA-Z._]()+)', test_method).group(1)
+        method_name = re.search(r'test:([a-zA-Z._()]+)', test_method).group(1)
     except:
         class_name = ""
         method_name = ""
