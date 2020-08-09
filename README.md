@@ -15,6 +15,13 @@ cd spidertools
 pip3 install -e .
 ```
 
+## Development
+- Dependencies:
+    - tox
+    - [optional/recommended] virtualenv
+
+- Running Tests: `tox`
+
 To make use of the wrappers the tools itself need to be installed as well, see the documentation for each project how to do that.
 
 ## TODO: 
