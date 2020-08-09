@@ -23,13 +23,13 @@ class TacocoRunner():
 
     def build(self):
         print(f"[TACOCO] start builder... {self.project_path}")
-        
+
         # If tacoco was already run before it places a classpath in the root directory
         # which causes problems for a rerun for some checks (apache-rat-plugin).
         p = Popen(["rm", "tacoco.cp"], cwd=self.project_path)
         p.wait()
         # TODO Make use of the tacoco build capabilities...
-        p = Popen([f"mvn exec:java -Pfind-working-build -Dexec.args=\"--sut {self.project_path} --number 0\""], cwd=self.tacoco_path, shell=True)
+        p = Popen([f"mvn compile test-compile -Dmaven.compiler.source=11 -Dmaven.compiler.target=11 -Danimal.sniffer.skip=True"], cwd=self.project_path, shell=True)
         return p.wait()
 
     def run(self):
@@ -77,5 +77,5 @@ class TacocoRunner():
         """
 
         p = Popen(run_tacoco_reader_cmd, cwd=self.tacoco_path, shell=True)
-        
+
         return p.wait()

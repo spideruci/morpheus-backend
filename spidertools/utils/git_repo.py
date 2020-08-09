@@ -1,7 +1,8 @@
-from git import Repo
+from git import Repo, Tag, Git
 import tempfile
 import shutil
 import os
+from subprocess import Popen
 
 class GitRepo(object):
     def __init__(self, url: str):
@@ -30,6 +31,10 @@ class GitRepo(object):
         self.close()
         shutil.rmtree(self.target_dir)
 
+    def clean(self):
+        p = Popen(["git", "clean", "-fxd"], cwd=self.target_dir)
+        return p.wait()
+
     def close(self):
         self.repo.close()
 
@@ -53,3 +58,12 @@ class GitRepo(object):
         else:
             return project_name
 
+    def iterate_tagged_commits(self, max_commits=-1) -> Tag:
+        git: Git = self.repo.git
+
+        for i, tag in enumerate(reversed(self.repo.tags)):
+            git.checkout(tag)
+            yield tag
+
+            if max_commits == i:
+                break

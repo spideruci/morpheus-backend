@@ -1,6 +1,6 @@
 import math
 import numpy as np
-import dateutil.parser
+import dateutil
 
 from subprocess import Popen, PIPE
 from datetime import datetime, date
