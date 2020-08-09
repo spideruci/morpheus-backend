@@ -103,13 +103,16 @@ class ProductionMethodTableHandler(TableHandler):
 
     def get_method_id(self, method_name, class_name, package_name, commit_id):
         return self.select('''
-            SELECT method_id FROM Commits 
+            SELECT method_id FROM ProductionMethods 
             WHERE method_name=? 
             AND class_name=?
             AND package_name=?
             AND commit_id=?
         
         ''', (method_name, class_name, package_name, commit_id))[0] 
+    
+    def get_all_methods(self, project_id, commit_id):
+        pass
 
 class TestMethodTableHandler(TableHandler):
     def __init__(self, database_location):
@@ -120,8 +123,8 @@ class TestMethodTableHandler(TableHandler):
             commit_id INTEGER,
             test_id INTEGER,
             test_name TEXT,
-            FOREIGN KEY ( commit_id ) REFERENCES Commits( commit_id )
-            PRIMARY KEY (commit_id, test_id)
+            FOREIGN KEY ( commit_id ) REFERENCES Commits( commit_id ),
+            PRIMARY KEY ( commit_id, test_id )
         );
         """
         self.create(CREATE_TABLE)
@@ -129,20 +132,56 @@ class TestMethodTableHandler(TableHandler):
     def add_test_method(self, test_id: int, test_name: str, commit_id: int):
         self.insert('''INSERT INTO TestMethods( test_id, test_name, commit_id ) VALUES (?, ?, ?) ''', (test_id, test_name, commit_id))
 
+    def get_all_methods(self, project_id, commit_id):
+        pass
 
 class MethodCoverageTableHandler(TableHandler):
-        def __init__(self, database_location):
-            super().__init__(database_location)
+    def __init__(self, database_location):
+        super().__init__(database_location)
 
-            CREATE_TABLE = """
-            CREATE TABLE IF NOT EXISTS MethodCoverage (
-                method_id INTEGER,
-                test_id INTEGER,
-                commit_id TEXT,
-                FOREIGN KEY ( commit_id ) REFERENCES Commits( commit_id ),
-                FOREIGN KEY ( test_id ) REFERENCES Commits( commit_id ),
-                FOREIGN KEY ( method_id ) REFERENCES Commits( commit_id ),
-                PRIMARY KEY (method_id, test_id, commit_id)
-            );
-            """
-            self.create(CREATE_TABLE)
+        CREATE_TABLE = """
+        CREATE TABLE IF NOT EXISTS MethodCoverage (
+            method_id INTEGER,
+            test_id INTEGER,
+            commit_id TEXT,
+            FOREIGN KEY ( commit_id ) REFERENCES Commits( commit_id ),
+            FOREIGN KEY ( test_id ) REFERENCES Commits( commit_id ),
+            FOREIGN KEY ( method_id ) REFERENCES Commits( commit_id ),
+            PRIMARY KEY (method_id, test_id, commit_id)
+        );
+        """
+        self.create(CREATE_TABLE)
+    
+    def add_coverage(self, method_id, test_id, commit_id):
+        self.insert('''INSERT INTO MethodCoverage ( method_id, test_id, commit_id ) VALUES (?, ?, ?) ''', (method_id, test_id, commit_id))
+
+    def get_all_methods(self, project_id, commit_id):
+        pass
+
+class MethodCoverageHandler():
+
+    def __init__(self, database_location):
+        self.prod_method_table = ProductionMethodTableHandler(database_location)
+        self.test_method_table = TestMethodTableHandler(database_location)
+        self.cov_method_table = MethodCoverageTableHandler(database_location)
+
+    def add_project_coverage(self, project_id: int, commit_id: str, prod_methods, test_methods):
+
+        for method in prod_methods:
+            self.prod_method_table.add_production_method(method["methodName"], method["className"], method["packageName"], commit_id)
+
+        for method in test_methods:
+            self.test_method_table.add_test_method(method["test_id"], method["test_name"], commit_id)
+        
+        for method in prod_methods:
+            method_id = self.prod_method_table.get_method_id(method["methodName"], method["className"], method["packageName"], commit_id)
+            
+            for test_id in method['test_ids']:
+                self.cov_method_table.add_coverage(method_id, test_id, commit_id)
+    
+    def get_project_coverage(self, project_id: int, commit_id: str):
+        return {
+            'methods': self.prod_method_table.get_all_methods(project_id, commit_id),
+            'tests': self.test_method_table.get_all_methods(project_id, commit_id),
+            'links': self.prod_method_table.get_all_coverage(project_id, commit_id)
+        }
