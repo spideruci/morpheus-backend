@@ -1,21 +1,20 @@
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
+from pprint import pprint
 
 def test_adding_project_to_table():
     # Given a project and a database in memory
-    project1 = "spidertools"
-    project2 = "blinky"
-    project3 = "tacoco"
+    projects = ["spidertools",  "blinky", "tacoco"]
     project_db_handler = ProjectTableHandler(":memory:")
 
     # When: the project is added to the database
-    project_db_handler.add_project(project1)
-    project_db_handler.add_project(project2)
-    project_db_handler.add_project(project3)
-
+    for idx, project in enumerate(projects):
+        project_id = project_db_handler.add_project(project)
+        assert project_id == idx + 1
+ 
     # Then: it should be in the database
-    assert project_db_handler.get_project_id(project1) == 1
-    assert project_db_handler.get_project_id(project2) == 2
-    assert project_db_handler.get_project_id(project3) == 3
+    for project in projects: 
+        assert project_db_handler.get_project_id(project) is not None
+
 
 def test_adding_commits_to_table():
     # Given a project, three commits sha, and a database in memory
@@ -29,15 +28,15 @@ def test_adding_commits_to_table():
     commit_db_handler = CommitTableHandler(":memory:")
 
     # When: the project and commits are added to the database
-    project_db_handler.add_project(project)
-    project_id = project_db_handler.get_project_id(project)
+    project_id = project_db_handler.add_project(project)
 
-    for commit in commits:
-        commit_db_handler.add_commit(project_id, commit)
-    
+    for idx, commit in enumerate(commits):
+        commit_id = commit_db_handler.add_commit(project_id, commit)
+        assert commit_id == idx + 1
+
     # Then: it should be in the database
     for i, commit in enumerate(commits):
-        assert commit_db_handler.get_commit_id(project_id, commit) == i + 1
+        assert commit_db_handler.get_commit_id(project_id, commit) is not None
 
 def test_adding_coverage_to_table():
     # Given: some coverage of a specific project and commit, and placed in a database
@@ -46,11 +45,9 @@ def test_adding_coverage_to_table():
     commit_db_handler = CommitTableHandler(db_path)
     coverage_handler = MethodCoverageHandler(db_path)
     
-    project_db_handler.add_project("test")
-    project_id = project_db_handler.get_project_id("test")
-    commit_db_handler.add_commit(project_id, '1cb7348d6e164bac5538221998fceaf8a4c8df6a')
-    commit_id = commit_db_handler.get_commit_id(project_id, '1cb7348d6e164bac5538221998fceaf8a4c8df6a')
-    print(commit_id)
+    project_id = project_db_handler.add_project("test")
+    commit_id = commit_db_handler.add_commit(project_id, '1cb7348d6e164bac5538221998fceaf8a4c8df6a')
+
     prod_methods = [
         {
             "methodName": "write",
@@ -84,4 +81,7 @@ def test_adding_coverage_to_table():
     coverage_handler.add_project_coverage(project_id, commit_id, prod_methods, test_methods)
 
     # When: requesting the data
-    coverage_handler.get_project_coverage(project_id, commit_id)
+    result = coverage_handler.get_project_coverage(commit_id)
+    assert len(result["links"]) == 3
+    assert len(result["methods"]) == 2
+    assert len(result["tests"]) == 2
