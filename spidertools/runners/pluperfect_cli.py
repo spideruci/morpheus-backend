@@ -1,11 +1,12 @@
 import argparse
 import os
 import yaml
+import json
 from spidertools.utils.git_repo import GitRepo
 from spidertools.tools.tacoco import TacocoRunner
 from spidertools.tools.history import HistoryRunner, MethodParserRunner
 from spidertools.process_data.coverage_json import coverage_json
-from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, BuildTableHandler
+from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
 
 # By default the database is only created in memory
 DB_PATH = ":memory:"
@@ -25,38 +26,45 @@ def parse_arguments():
     return parser.parse_args()
 
 def start(project_url, output_path, tacoco_path, history_slider_path):
-
     global DB_PATH
 
     project_handler = ProjectTableHandler(DB_PATH)
     commit_handler = CommitTableHandler(DB_PATH)
+    coverage_handler = MethodCoverageHandler(DB_PATH)
 
     with GitRepo(project_url) as repo:
         # Add project and commit to database
-        project_handler.add_project(repo.get_project_name())
-        commit_handler.add_commit(project_handler.get_project_id(), repo.get_current_commit())
-
+        project_id = project_handler.add_project(repo.get_project_name())
+        commit_id = commit_handler.add_commit(project_id, repo.get_current_commit())
 
         # Analysis tools
         tacoco_runner = TacocoRunner(repo, output_path, tacoco_path)
         parser_runner = MethodParserRunner(repo, output_path, history_slider_path)
 
-        for commit in repo.iterate_tagged_commits(5):
-            print(commit, repo.get_current_commit())
-            _analysis(repo, tacoco_runner, parser_runner, output_path)
+        # for commit in repo.iterate_tagged_commits(5):
+        commit = repo.get_current_commit()
+        print(commit, repo.get_current_commit())
+        output = _analysis(repo, tacoco_runner, parser_runner, output_path)
+
+        if output:
+            project_output_path = f"{output_path}{os.path.sep}{repo.get_project_name()}{os.path.sep}"
+            commit_sha = repo.get_current_commit()
+            with open(f"{project_output_path}{commit_sha}-combined.json") as f:
+                data = json.load(f)
+                coverage_handler.add_project_coverage(project_id, commit_id, data["methods"]["production"], data["methods"]["test"])
+
+
 
 def _analysis(repo, tacoco_runner, parser_runner, output_path):
-    build_hanlder = BuildTableHandler(DB_PATH)
-
     # Before each analysis remove all generated files of previous run
     repo.clean()
 
     # Start analysis
     build_output = tacoco_runner.build()
 
-    build_hanlder.add_build_result()
     if build_output == 1:
         print("[ERROR] build failure...")
+        return False
     else:
         parser_runner.run()
         tacoco_runner.run()
@@ -71,6 +79,8 @@ def _analysis(repo, tacoco_runner, parser_runner, output_path):
             f"{project_output_path}{commit_sha}-combined.json",
             commit_id
         )
+
+        return True
 
 def main():
     print("Start analysis...")
