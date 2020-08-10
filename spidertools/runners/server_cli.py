@@ -1,10 +1,12 @@
 from flask import Flask, g
+from flask_cors import CORS
 import sqlite3
 import yaml
 import json
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
 
 app = Flask(__name__)
+CORS(app)
 
 DATABASE_PATH = ""
 HOST = "localhost"

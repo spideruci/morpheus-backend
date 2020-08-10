@@ -14,7 +14,8 @@ setup(
         'GitPython==3.1.3',
         'pyyaml==5.3.1', 
         'numpy==1.19.0',
-        'flask==1.1.2'
+        'flask==1.1.2',
+        'flask-cors==3.0.8'
     ],
     tests_require = [
         'pytest'
