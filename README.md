@@ -28,3 +28,5 @@ To make use of the wrappers the tools itself need to be installed as well, see t
 ## TODO: 
 - [ ] History slicing
 - [ ] Add [Blinky](https://github.com/spideruci/blinky-core) support in combination with tacoco
+- [ ] Store intermediate results in a tmp directory and remove that tmp directory after the analysis is done.
+- [ ] Create a server that can be used to access the data for visualization purposes.
