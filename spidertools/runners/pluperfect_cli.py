@@ -2,7 +2,7 @@ import argparse
 import os
 import yaml
 import json
-from spidertools.utils.git_repo import AnalysisRepo
+from spidertools.utils.analysis_repo import AnalysisRepo
 from spidertools.tools.tacoco import TacocoRunner
 from spidertools.tools.history import MethodParserRunner
 from spidertools.process_data.coverage_json import coverage_json

@@ -25,10 +25,10 @@ class TableHandler():
         c.row_factory = sqlite3.Row
         c.execute(sql, values)
 
-        if (result := c.fetchone()) is None:
+        if (result := c.fetchall()) is None:
             return None
         else:
-            return [dict(row) for row in c.fetchall()]
+            return [dict(row) for row in result]
 
 
     def insert(self, sql, values=()):
@@ -195,11 +195,10 @@ class MethodCoverageHandler():
             self.test_method_table.add_test_method(method["test_id"], method["test_name"], commit_id)
 
         for method in prod_methods:
-            method_id = self.prod_method_table.add_production_method(method["methodName"], method["className"], method["packageName"], commit_id)
-            
+            prod_method_id = self.prod_method_table.add_production_method(method["methodName"], method["className"], method["packageName"], commit_id)
+
             for test_id in method['test_ids']:
-                self.cov_method_table.add_coverage(method_id, test_id, commit_id)
-    
+                self.cov_method_table.add_coverage(prod_method_id, test_id, commit_id)
 
     def get_project_coverage(self, commit_id: int):
         return {

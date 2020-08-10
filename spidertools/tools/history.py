@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from subprocess import Popen, PIPE, call, check_output
 
-from spidertools.utils.git_repo import AnalysisRepo
+from spidertools.utils.analysis_repo import AnalysisRepo
 
 
 class HistoryRunner():

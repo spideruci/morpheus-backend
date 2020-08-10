@@ -3,8 +3,9 @@ from pprint import pprint
 
 def test_adding_project_to_table():
     # Given a project and a database in memory
+    db_path = ":memory:"
     projects = ["spidertools",  "blinky", "tacoco"]
-    project_db_handler = ProjectTableHandler(":memory:")
+    project_db_handler = ProjectTableHandler(db_path)
 
     # When: the project is added to the database
     for idx, project in enumerate(projects):
@@ -18,14 +19,15 @@ def test_adding_project_to_table():
 
 def test_adding_commits_to_table():
     # Given a project, three commits sha, and a database in memory
+    db_path = ':memory:'
     project = "spidertools"
     commits = [
         '1cb7348d6e164bac5538221998fceaf8a4c8df6a',
         '0ed92c9fa09a13a5b033b3943ebe9b737a6394e5',
         'a84873b9932e395dc0f0dcf59a9eb478208869f0'
     ]
-    project_db_handler = ProjectTableHandler(":memory:")
-    commit_db_handler = CommitTableHandler(":memory:")
+    project_db_handler = ProjectTableHandler(db_path)
+    commit_db_handler = CommitTableHandler(db_path)
 
     # When: the project and commits are added to the database
     project_id = project_db_handler.add_project(project)
@@ -82,6 +84,6 @@ def test_adding_coverage_to_table():
 
     # When: requesting the data
     result = coverage_handler.get_project_coverage(commit_id)
-    assert len(result["links"]) == 3
     assert len(result["methods"]) == 2
     assert len(result["tests"]) == 2
+    assert len(result["links"]) == 3
