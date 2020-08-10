@@ -4,13 +4,13 @@ import shutil
 import os
 from subprocess import Popen
 
-class GitRepo(object):
+class AnalysisRepo(object):
     def __init__(self, url: str):
         self.url = url
         self.clone_commands = {}
         self.repo: Repo
 
-    def set_depth(self, depth: int) -> 'GitRepo':
+    def set_depth(self, depth: int) -> 'AnalysisRepo':
         self.clone_commands.update({"depth": depth})
         return self
 

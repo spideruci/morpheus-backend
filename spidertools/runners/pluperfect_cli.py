@@ -2,7 +2,7 @@ import argparse
 import os
 import yaml
 import json
-from spidertools.utils.git_repo import GitRepo
+from spidertools.utils.git_repo import AnalysisRepo
 from spidertools.tools.tacoco import TacocoRunner
 from spidertools.tools.history import MethodParserRunner
 from spidertools.process_data.coverage_json import coverage_json
@@ -32,7 +32,7 @@ def start(project_url, output_path, tacoco_path, history_slider_path):
     commit_handler = CommitTableHandler(DB_PATH)
     coverage_handler = MethodCoverageHandler(DB_PATH)
 
-    with GitRepo(project_url) as repo:
+    with AnalysisRepo(project_url) as repo:
         # Add project and commit to database
         if (project_id := project_handler.get_project_id(repo.get_project_name())) is None:
             project_id = project_handler.add_project(repo.get_project_name())

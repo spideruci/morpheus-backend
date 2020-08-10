@@ -9,12 +9,12 @@ import os
 from pathlib import Path
 from subprocess import Popen, PIPE, call, check_output
 
-from spidertools.utils.git_repo import GitRepo
+from spidertools.utils.analysis_repo import AnalysisRepo
 
 
 class TacocoRunner():
 
-    def __init__(self, repo: GitRepo, output_dir: str, tacoco_path: str, jdk: str = "13"):
+    def __init__(self, repo: AnalysisRepo, output_dir: str, tacoco_path: str, jdk: str = "13"):
         self.__repo = repo
         self.project_path = repo.get_project_directory()
         self.tacoco_path = tacoco_path

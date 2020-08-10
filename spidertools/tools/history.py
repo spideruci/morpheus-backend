@@ -9,12 +9,12 @@ import os
 from pathlib import Path
 from subprocess import Popen, PIPE, call, check_output
 
-from spidertools.utils.git_repo import GitRepo
+from spidertools.utils.git_repo import AnalysisRepo
 
 
 class HistoryRunner():
 
-    def __init__(self, repo: GitRepo, output_dir: str, history_slicer_path: str):
+    def __init__(self, repo: AnalysisRepo, output_dir: str, history_slicer_path: str):
         self.__repo = repo
         self.project_path = repo.get_project_directory()
         self.history_slicer_path = history_slicer_path
@@ -33,7 +33,7 @@ class HistoryRunner():
 
 class MethodParserRunner():
 
-    def __init__(self, repo: GitRepo, output_dir: str, history_slicer_path: str):
+    def __init__(self, repo: AnalysisRepo, output_dir: str, history_slicer_path: str):
         self.__repo = repo
         self.project_path = repo.get_project_directory()
         self.history_slicer_path = history_slicer_path
