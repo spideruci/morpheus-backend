@@ -21,13 +21,27 @@ def open_json_file(path: str):
 
 
 def parse_test_method(test_method : str):
-    try:
-        class_name = re.search(r'runner:([a-zA-Z._()]+)', test_method).group(1)
-        method_name = re.search(r'test:([a-zA-Z._()]+)', test_method).group(1)
-    except:
+    # Parsing the class name
+    if (result := re.search(r'runner:([a-zA-Z0-9._()]+)', test_method)) is not None:
+        class_name = result.group(1)
+    elif (result :=  re.search(r'class:([a-zA-Z0-9._()]+)', test_method)) is not None:
+        class_name = result.group(1)
+    else:
+        print("[ERROR] class_name error: {}".format(test_method))
         class_name = ""
+
+    # Parsing the method name aka test name.
+    if  (result := re.search(r'test:([a-zA-Z0-9._()]+)', test_method)) is not None:
+        method_name = result.group(1)
+    elif (result := re.search(r'method:([a-zA-Z0-9._()]+)', test_method)) is not None:
+        method_name = result.group(1)
+    elif (result := re.search(r'test-template::([a-zA-Z0-9._()]+)', test_method)) is not None:
+        method_name = result.group(1)
+        invocation_number = re.search(r'test-template-invocation:#([0-9]+)', test_method).group(1)
+        method_name = f'{method_name}/{invocation_number}'
+    else:
+        print("[ERROR] test_name error: {}".format(test_method))
         method_name = ""
-        print("test_name error: {}".format(test_method))
 
     return {
         "test_name": test_method,
@@ -76,6 +90,4 @@ def coverage_json(methods_path, coverage_path, output_path, commit_sha):
         }
     }
 
-    with open(output_path, 'w') as json_file:
-        json.dump(output, json_file, indent=4)
-        json_file.flush()
+    return output

@@ -1,7 +1,6 @@
 #/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from distutils.core import setup
-
+from setuptools import setup
 from spidertools import __version__
 
 setup(
@@ -15,6 +14,9 @@ setup(
         'GitPython==3.1.3',
         'pyyaml==5.3.1', 
         'numpy==1.19.0'
+    ],
+    tests_require = [
+        'pytest'
     ],
     entry_points = {
         'console_scripts': [

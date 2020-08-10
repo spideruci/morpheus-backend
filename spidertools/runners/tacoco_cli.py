@@ -1,7 +1,7 @@
 import argparse
 import os
 import yaml
-from spidertools.utils.git_repo import GitRepo
+from spidertools.utils.analysis_repo import AnalysisRepo
 from spidertools.tools.tacoco import TacocoRunner
 
 def parse_arguments():
@@ -20,7 +20,7 @@ def parse_arguments():
     return parser.parse_args()
 
 def start(project_url, output_path, tacoco_path):
-    with GitRepo(project_url).set_depth(1) as repo:
+    with AnalysisRepo(project_url).set_depth(1) as repo:
         runner = TacocoRunner(repo, output_path, tacoco_path)
 
         build_output = runner.build()

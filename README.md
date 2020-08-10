@@ -15,11 +15,18 @@ cd spidertools
 pip3 install -e .
 ```
 
+## Development
+- Dependencies:
+    - Python3.8
+    - tox
+    - [optional/recommended] virtualenv
+
+- Running Tests: `tox`
+
 To make use of the wrappers the tools itself need to be installed as well, see the documentation for each project how to do that.
 
 ## TODO: 
-- [ ] Add support for walking through commits and run different analyses in git_repo.py
-- [ ] History slicing...
-- [ ] Method parsing...
+- [ ] History slicing
 - [ ] Add [Blinky](https://github.com/spideruci/blinky-core) support in combination with tacoco
-- [ ] Store data in a DB???
+- [ ] Store intermediate results in a tmp directory and remove that tmp directory after the analysis is done.
+- [ ] Create a server that can be used to access the data for visualization purposes.

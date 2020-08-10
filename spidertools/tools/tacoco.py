@@ -9,12 +9,12 @@ import os
 from pathlib import Path
 from subprocess import Popen, PIPE, call, check_output
 
-from spidertools.utils.git_repo import GitRepo
+from spidertools.utils.analysis_repo import AnalysisRepo
 
 
 class TacocoRunner():
 
-    def __init__(self, repo: GitRepo, output_dir: str, tacoco_path: str, jdk: str = "13"):
+    def __init__(self, repo: AnalysisRepo, output_dir: str, tacoco_path: str, jdk: str = "13"):
         self.__repo = repo
         self.project_path = repo.get_project_directory()
         self.tacoco_path = tacoco_path
@@ -29,7 +29,7 @@ class TacocoRunner():
         p = Popen(["rm", "tacoco.cp"], cwd=self.project_path)
         p.wait()
         # TODO Make use of the tacoco build capabilities...
-        p = Popen([f"mvn compile test-compile -Dmaven.compiler.source=11 -Dmaven.compiler.target=11"], cwd=self.project_path, shell=True)
+        p = Popen([f"mvn compile test-compile -Dmaven.compiler.source=11 -Dmaven.compiler.target=11 -Danimal.sniffer.skip=True"], cwd=self.project_path, shell=True)
         return p.wait()
 
     def run(self):
