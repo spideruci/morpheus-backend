@@ -63,7 +63,7 @@ class GitRepo(object):
 
         for i, tag in enumerate(reversed(self.repo.tags)):
             git.checkout(tag)
-            yield tag
+            yield self.get_current_commit()
 
             if max_commits == i:
                 break

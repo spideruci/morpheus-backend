@@ -4,7 +4,7 @@ import yaml
 import json
 from spidertools.utils.git_repo import GitRepo
 from spidertools.tools.tacoco import TacocoRunner
-from spidertools.tools.history import HistoryRunner, MethodParserRunner
+from spidertools.tools.history import MethodParserRunner
 from spidertools.process_data.coverage_json import coverage_json
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
 
@@ -34,24 +34,32 @@ def start(project_url, output_path, tacoco_path, history_slider_path):
 
     with GitRepo(project_url) as repo:
         # Add project and commit to database
-        project_id = project_handler.add_project(repo.get_project_name())
-        commit_id = commit_handler.add_commit(project_id, repo.get_current_commit())
+        if (project_id := project_handler.get_project_id(repo.get_project_name())) is None:
+            project_id = project_handler.add_project(repo.get_project_name())
 
         # Analysis tools
         tacoco_runner = TacocoRunner(repo, output_path, tacoco_path)
         parser_runner = MethodParserRunner(repo, output_path, history_slider_path)
 
-        # for commit in repo.iterate_tagged_commits(5):
-        commit = repo.get_current_commit()
-        print(commit, repo.get_current_commit())
-        output = _analysis(repo, tacoco_runner, parser_runner, output_path)
+        for commit in repo.iterate_tagged_commits(5):
+            commit_id = commit_handler.get_commit_id(project_id, commit)
 
-        if output:
-            project_output_path = f"{output_path}{os.path.sep}{repo.get_project_name()}{os.path.sep}"
-            commit_sha = repo.get_current_commit()
-            with open(f"{project_output_path}{commit_sha}-combined.json") as f:
-                data = json.load(f)
-                coverage_handler.add_project_coverage(project_id, commit_id, data["methods"]["production"], data["methods"]["test"])
+            if commit_id is not None:
+                print(f'[Warning] commit ID already exists: {commit}')
+                continue
+            else:
+                print(f'[Info] commit ID does not exist yet: {commit}')
+
+            commit_id = commit_handler.add_commit(project_id, commit)
+
+            output = _analysis(repo, tacoco_runner, parser_runner, output_path)
+
+            if output:
+                project_output_path = f"{output_path}{os.path.sep}{repo.get_project_name()}{os.path.sep}"
+                commit_sha = repo.get_current_commit()
+                with open(f"{project_output_path}{commit_sha}-combined.json") as f:
+                    data = json.load(f)
+                    coverage_handler.add_project_coverage(project_id, commit_id, data["methods"]["production"], data["methods"]["test"])
 
 
 
