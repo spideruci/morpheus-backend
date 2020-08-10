@@ -1,4 +1,11 @@
-TACOCO_HOME: /Users/kajdreef/code/research/tacoco
-HISTORY_SLICER_HOME: /Users/kajdreef/code/research/history-slicing
-OUTPUT_DIR: /Users/kajdreef/code/research/data
-DB_LOCATION: /Users/kajdreef/code/research/data/research.sqlite
+
+analysis:
+    TACOCO_HOME: /Users/kajdreef/code/research/tacoco
+    HISTORY_SLICER_HOME: /Users/kajdreef/code/research/history-slicing
+    OUTPUT_DIR: /Users/kajdreef/code/research/data
+    DB_LOCATION: /Users/kajdreef/code/research/data/research.sqlite
+
+server:
+    port: 8000
+    host: localhost
+    database_path: /Users/kajdreef/code/research/data/research.sqlite
