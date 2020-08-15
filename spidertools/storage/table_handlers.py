@@ -48,7 +48,7 @@ class ProjectTableHandler(TableHandler):
         CREATE_TABLE = """
         CREATE TABLE IF NOT EXISTS Projects (
             project_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_name TEXT
+            project_name TEXT UNIQUE
         );
         """
 
@@ -59,6 +59,9 @@ class ProjectTableHandler(TableHandler):
 
     def get_project_id(self, project_name) -> int:
         return self.select('''SELECT project_id FROM Projects WHERE project_name=?''', (project_name, ))
+
+    def get_projects(self):
+        return self.select_all('''SELECT project_name FROM Projects''')
 
 class CommitTableHandler(TableHandler):
     def __init__(self, database_location):
@@ -79,6 +82,9 @@ class CommitTableHandler(TableHandler):
 
     def get_commit_id(self, project_id, commit_sha):
         return self.select('''SELECT commit_id FROM Commits WHERE project_id=? AND commit_sha=?''', (project_id, commit_sha))
+
+    def get_all_commits(self, project_id:int):
+        return self.select_all('''SELECT commit_sha FROM Commits WHERE project_id=?''', (int(project_id),))
 
 class BuildTableHandler(TableHandler):
     def __init__(self, database_location):
