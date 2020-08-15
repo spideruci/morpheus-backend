@@ -84,7 +84,6 @@ class CommitTableHandler(TableHandler):
         return self.select('''SELECT commit_id FROM Commits WHERE project_id=? AND commit_sha=?''', (project_id, commit_sha))
 
     def get_all_commits(self, project_id:int):
-        print(f"\n\n\n\n\n\n{project_id}\n\n\n\n\n\n")
         return self.select_all('''SELECT commit_sha FROM Commits WHERE project_id=?''', (int(project_id),))
 
 class BuildTableHandler(TableHandler):
