@@ -15,7 +15,8 @@ setup(
         'pyyaml==5.3.1', 
         'numpy==1.19.0',
         'flask==1.1.2',
-        'flask-cors==3.0.8'
+        'flask-cors==3.0.8',
+        'scikit-learn==0.23.2'
     ],
     tests_require = [
         'pytest'

@@ -29,5 +29,9 @@ To make use of the wrappers the tools itself need to be installed as well, see t
 - [ ] History slicing
 - [ ] Add [Blinky](https://github.com/spideruci/blinky-core) support in combination with tacoco
 - [ ] Store intermediate results in a tmp directory and remove that tmp directory after the analysis is done.
-- [ ] Create a server that can be used to access the data for visualization purposes.
 - [ ] Sanitize request input on the server. Currently, it grabs input and passes it directly to the database. Easy to do SQL injection.
+- [ ] Create sorting endpoint, that allows to post data and sort.
+    - [ ] sorting based on name
+    - [ ] Agglomerative clustering based on name
+    - [ ] Agglomerative clustering based on what is tested
+- [ ] Create filter endpoint, that allows me to post data and filter.

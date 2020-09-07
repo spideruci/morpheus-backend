@@ -1,10 +1,10 @@
-from flask import Flask, g
+from flask import Flask, g, request
 from flask_cors import CORS
 import sqlite3
 import yaml
 import json
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
-
+from spidertools.process_data.sorting.name import sort_by_name
 app = Flask(__name__)
 CORS(app)
 
@@ -46,18 +46,29 @@ def coverage(project_name, commit_sha):
     commit_handler = CommitTableHandler(DATABASE_PATH)
     coverage_handler = MethodCoverageHandler(DATABASE_PATH)
 
+    sort_methods = {
+        "name": None
+    }
+
     if (project_id := project_handler.get_project_id(project_name)) is None:
         return {"Error": f"Project '{project_name}' not found..."}, 404
 
     if (commit_id := commit_handler.get_commit_id(project_id['project_id'], commit_sha)) is None:
         return {"Error": f"No commit '{commit_sha}' found in project: '{project_name}'..."}, 404
 
+    coverage = coverage_handler.get_project_coverage(commit_id['commit_id'])
+
+    if (sorting_method := request.args.get("sorting_method", None) is not None):
+        # TODO implement nice method to sort matrix data in predefined ways.
+        coverage = sort_methods.get(sorting_method)
+    else:
+        coverage = sort_by_name(coverage)
+
     return {
         "project": project_name,
         "commit_sha": commit_sha,
-        "coverage": coverage_handler.get_project_coverage(commit_id['commit_id'])
+        "coverage": coverage
     }, 200
-
 
 def load_configuration(configuration_file_path):
     global HOST, PORT, DATABASE_PATH

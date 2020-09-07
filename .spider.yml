@@ -1,4 +1,3 @@
-
 analysis:
     TACOCO_HOME: /Users/kajdreef/code/research/tacoco
     HISTORY_SLICER_HOME: /Users/kajdreef/code/research/history-slicing
@@ -8,4 +7,4 @@ analysis:
 server:
     port: 8000
     host: localhost
-    database_path: /Users/kajdreef/code/research/data/research.sqlite
+    database_path: /Users/kajdreef/code/research/data/research-backup.sqlite
