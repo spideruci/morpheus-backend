@@ -20,6 +20,9 @@ class LineCoverage():
             activating_tests = line_coverage['activatingTests']
             test_stmt_matrix = line_coverage['testStmtMatrix']
 
+            if activating_tests is not None and len(activating_tests) == 0:
+                print("[Error] No activating test cases where found...")
+
             line_cov_dict = dict()
             for test_id, lines in zip(activating_tests, test_stmt_matrix):
                 for i, line in enumerate(lines):
