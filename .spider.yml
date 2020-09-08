@@ -1,10 +1,10 @@
 analysis:
     TACOCO_HOME: /Users/kajdreef/code/research/tacoco
-    HISTORY_SLICER_HOME: /Users/kajdreef/code/research/history-slicing
-    OUTPUT_DIR: /Users/kajdreef/code/research/data
-    DB_LOCATION: /Users/kajdreef/code/research/data/research.sqlite
+    HISTORY_SLICER_HOME: /Users/kajdreef/code/2020/history-slicing
+    OUTPUT_DIR: /Users/kajdreef/code/2020/results/
+    DB_LOCATION: /Users/kajdreef/code/2020/results/research.sqlite
 
 server:
     port: 8000
     host: localhost
-    database_path: /Users/kajdreef/code/research/data/research-backup.sqlite
+    database_path: /Users/kajdreef/code/2020/research-backup.sqlite

@@ -198,6 +198,7 @@ class MethodCoverageHandler():
 
     def add_project_coverage(self, project_id: int, commit_id: int, prod_methods, test_methods):
         for method in test_methods:
+            # TODO: test methods should be described my class name + method name.
             self.test_method_table.add_test_method(method["test_id"], method["test_name"], commit_id)
 
         for method in prod_methods:
