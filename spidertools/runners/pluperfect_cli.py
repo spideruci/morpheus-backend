@@ -21,11 +21,12 @@ def parse_arguments():
     parser.add_argument('project_url', type=str,
                         help="Absolute path to system-under-test's root.")
     parser.add_argument('--output_path', type=str, help="absolute path to output directory")
+    parser.add_argument('--current', type=bool, action='store_true', help="Run the analysis on current version of the code")
     parser.add_argument('--config', type=str, help="absolute path to tacoco")
 
     return parser.parse_args()
 
-def start(project_url, output_path, tacoco_path, history_slider_path):
+def start(project_url, output_path, tacoco_path, history_slider_path, single_run):
     global DB_PATH
 
     project_handler = ProjectTableHandler(DB_PATH)
@@ -41,7 +42,15 @@ def start(project_url, output_path, tacoco_path, history_slider_path):
         tacoco_runner = TacocoRunner(repo, output_path, tacoco_path)
         parser_runner = MethodParserRunner(repo, output_path, history_slider_path)
 
-        for commit in repo.iterate_tagged_commits(5):
+        # Get all commits we want to run the analysis on.
+        commits = []
+        if single_run:
+            commits = [repo.get_current_commit()]
+        else:
+            commits = repo.iterate_tagged_commits(5)
+
+        # TODO: Check if commit/project already in database else delete and rerun? or skip? maybe flag to choose between overwriting or skipping?
+        for commit in commits:
             commit_id = commit_handler.get_commit_id(project_id, commit)
 
             if commit_id is not None:
@@ -105,4 +114,4 @@ def main():
         tacoco_path = analysis_config["TACOCO_HOME"]
         history_slider_path = analysis_config["HISTORY_SLICER_HOME"]
 
-    start(project_url, output_path, tacoco_path, history_slider_path)
+    start(project_url, output_path, tacoco_path, history_slider_path, single_run=arguments.current)
