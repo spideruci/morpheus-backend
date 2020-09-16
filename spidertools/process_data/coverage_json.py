@@ -81,6 +81,7 @@ def coverage_json(methods_path, coverage_path, commit_sha):
     for method_index, p_method in enumerate(prod_methods):
         production_output.append({
             "methodName": p_method.methodName,
+            "methodDecl": p_method.methodDecl,
             "className": p_method.className,
             "packageName": p_method.packageName,
             "test_ids": list(method_coverage.get_tests_testing(p_method)),

@@ -78,6 +78,7 @@ def load_configuration(configuration_file_path):
     HOST = config['server']['host']
     PORT = config['server']['port']
     DATABASE_PATH = config['server']['database_path']
+    print(f"Load database: {DATABASE_PATH}")
 
 
 def main():

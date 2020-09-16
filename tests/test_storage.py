@@ -53,12 +53,14 @@ def test_adding_coverage_to_table():
     prod_methods = [
         {
             "methodName": "write",
+            "methodDecl": "void write()",
             "className": "IOUtils",
             "packageName": "org.apache.commons.io",
             "test_ids": [0]
         },
         {
             "methodName": "toString",
+            "methodDecl": "String toString()",
             "className": "DelegateFileFilter",
             "packageName": "org.apache.commons.io.filefilter",
             "test_ids": [0, 1]
@@ -87,3 +89,70 @@ def test_adding_coverage_to_table():
     assert len(result["methods"]) == 2
     assert len(result["tests"]) == 2
     assert len(result["links"]) == 3
+
+def test_adding_same_production_method_for_different_commits():
+    # Given: some coverage of a specific project and commit, and placed in a database
+    db_path = ':memory:'
+    project_db_handler = ProjectTableHandler(db_path)
+    commit_db_handler = CommitTableHandler(db_path)
+    coverage_handler = MethodCoverageHandler(db_path)
+
+    project_id = project_db_handler.add_project("test")
+    commit_id1 = commit_db_handler.add_commit(project_id, 'commit_1')
+    commit_id2 = commit_db_handler.add_commit(project_id, 'commit_2')
+
+    prod_methods = [{
+        "methodName": "write",
+        "methodDecl": "void write()",
+        "className": "IOUtils",
+        "packageName": "org.apache.commons.io",
+        "test_ids": [0]
+    }]
+
+    # When: Adding the coverage information for both commits
+    coverage_handler.add_project_coverage(project_id, commit_id1, prod_methods, [])
+    coverage_handler.add_project_coverage(project_id, commit_id2, prod_methods, [])
+
+    # Then: coverage should be the same
+    coverage1 = coverage_handler.get_project_coverage(commit_id1)
+    coverage2 = coverage_handler.get_project_coverage(commit_id2)
+
+    assert coverage1 == coverage2
+
+def test_adding_same_method_for_different_commits():
+    # Given: some coverage of a specific project and commit, and placed in a database
+    db_path = ':memory:'
+    project_db_handler = ProjectTableHandler(db_path)
+    commit_db_handler = CommitTableHandler(db_path)
+    coverage_handler = MethodCoverageHandler(db_path)
+
+    project_id = project_db_handler.add_project("test")
+    commit_id1 = commit_db_handler.add_commit(project_id, 'commit_1')
+    commit_id2 = commit_db_handler.add_commit(project_id, 'commit_2')
+
+    prod_methods = [{
+        "methodName": "write",
+        "methodDecl": "void write()",
+        "className": "IOUtils",
+        "packageName": "org.apache.commons.io",
+        "test_ids": [0]
+    }]
+
+    test_methods = [{
+        "test_id": 0,
+        "test_name": "testFileCleanerDirectory.[engine:junit-vintage]/[runner:org.apache.commons.io.FileCleaningTrackerTestCase]/[test:testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)]",
+        "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase",
+        "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)"
+    }]
+
+    # When: Adding the coverage information for both commits
+    coverage_handler.add_project_coverage(project_id, commit_id1, prod_methods, test_methods)
+    coverage_handler.add_project_coverage(project_id, commit_id2, prod_methods, test_methods)
+
+    # Then: coverage should be the same
+    coverage1 = coverage_handler.get_project_coverage(commit_id1)
+    coverage2 = coverage_handler.get_project_coverage(commit_id2)
+
+    assert len(coverage1['tests']) == 1
+    assert len(coverage2['tests']) == 1
+    assert coverage1 == coverage2

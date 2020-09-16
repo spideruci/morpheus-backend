@@ -7,4 +7,4 @@ analysis:
 server:
     port: 8000
     host: localhost
-    database_path: /Users/kajdreef/code/2020/research-backup.sqlite
+    database_path: /Users/kajdreef/code/2020/results/research-backup.sqlite
