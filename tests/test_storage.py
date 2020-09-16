@@ -1,5 +1,4 @@
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
-from pprint import pprint
 
 def test_adding_project_to_table():
     # Given a project and a database in memory
@@ -15,7 +14,6 @@ def test_adding_project_to_table():
     # Then: it should be in the database
     for project in projects: 
         assert project_db_handler.get_project_id(project) is not None
-
 
 def test_adding_commits_to_table():
     # Given a project, three commits sha, and a database in memory

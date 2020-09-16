@@ -1,5 +1,4 @@
 import os
-from pprint import pprint
 from spidertools.process_data.coverage_json import coverage_json
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
 
@@ -28,7 +27,6 @@ def test_creating_method_coverage_file_jsoup():
     output = coverage_handler.get_project_coverage(commit_id)
     assert output["links"] is not None
     assert len(output["links"]) != 0
-
 
 def test_creating_method_coverage_file_commons_io():
     # Given:

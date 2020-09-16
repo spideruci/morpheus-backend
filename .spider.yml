@@ -1,5 +1,5 @@
 analysis:
-    TACOCO_HOME: /Users/kajdreef/code/research/tacoco
+    TACOCO_HOME: /Users/kajdreef/code/tools/tacoco
     HISTORY_SLICER_HOME: /Users/kajdreef/code/2020/history-slicing
     OUTPUT_DIR: /Users/kajdreef/code/2020/results/
     DB_LOCATION: /Users/kajdreef/code/2020/results/research.sqlite

@@ -132,7 +132,6 @@ class ProductionMethodTableHandler(TableHandler):
         self.create(CREATE_COMMIT_METHODS_TABLE)
 
     def add_production_method(self, method_name: str, method_decl: str, class_name: str, package_name: str, commit_id: int):
-        print( method_name, method_decl, class_name, package_name)
         try:
             method_id = self.insert('''INSERT INTO ProductionMethods( method_name, method_decl, class_name, package_name ) VALUES (?, ?, ?, ?) ''', (method_name, method_decl, class_name, package_name))
         except:
@@ -141,7 +140,7 @@ class ProductionMethodTableHandler(TableHandler):
         try:
             self.insert ('''INSERT INTO CommitMethodLinkTable ( method_id, commit_id ) VALUES (?, ?) ''', (method_id, commit_id))
         except:
-            print(method_name, class_name, package_name, commit_id)
+            pass
         return method_id
 
     def get_method_id(self, method_name, method_decl, class_name, package_name):
