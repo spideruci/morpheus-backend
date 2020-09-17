@@ -1,4 +1,5 @@
 import sqlite3
+from typing import Dict
 
 # Abstact class
 class TableHandler():
@@ -242,9 +243,15 @@ class MethodCoverageHandler():
         self.cov_method_table = MethodCoverageTableHandler(database_location)
 
     def add_project_coverage(self, project_id: int, commit_id: int, prod_methods, test_methods):
+        test_id_map : Dict = {}
+
         for method in test_methods:
             # TODO: test methods should be described my class name + method name.
-            self.test_method_table.add_test_method(method["test_id"], method["test_name"], commit_id)
+            # PROBLEM: we currently map 'global' method_id to 'local' test_id (unique per commit), so create a map of local test_id to global test_id store only global ID in database.
+            global_test_id = self.test_method_table.add_test_method(method["class_name"], method["test_name"], project_id)
+
+            if (test_id := method["test_id"]) is not None and test_id in test_id_map:
+                test_id_map[test_id] = global_test_id
 
         for method in prod_methods:
             prod_method_id = self.prod_method_table.add_production_method(method["methodName"], method["methodDecl"], method["className"], method["packageName"], commit_id)
