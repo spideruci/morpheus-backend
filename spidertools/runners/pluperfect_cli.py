@@ -50,6 +50,7 @@ def start(project_url, output_path, tacoco_path, history_slider_path, single_run
         else:
             commits = repo.iterate_tagged_commits(5)
 
+        print(f"[INFO] commits to analyze... {commits}")
         for commit in commits:    
             #  Check if database already has an entry for the commit, if so, skip.
             commit_entry = commit_handler.get_commit_id(project_id, commit)
