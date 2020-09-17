@@ -154,3 +154,85 @@ def test_adding_same_method_for_different_commits():
     assert len(coverage1['tests']) == 1
     assert len(coverage2['tests']) == 1
     assert coverage1 == coverage2
+
+
+def test_adding_same_method_but_different_test_ids_for_different_commits():
+    # Given: some coverage of a specific project and commit, and placed in a database
+    db_path = ':memory:'
+    project_db_handler = ProjectTableHandler(db_path)
+    commit_db_handler = CommitTableHandler(db_path)
+    coverage_handler = MethodCoverageHandler(db_path)
+
+    project_id = project_db_handler.add_project("test")
+    commit_id1 = commit_db_handler.add_commit(project_id, 'commit_1')
+    commit_id2 = commit_db_handler.add_commit(project_id, 'commit_2')
+
+    prod_methods_c1 = [
+        {
+            "methodName": "write",
+            "methodDecl": "void write()",
+            "className": "IOUtils",
+            "packageName": "org.apache.commons.io",
+            "test_ids": [0]
+        },
+        {
+            "methodName": "toString",
+            "methodDecl": "String toString()",
+            "className": "DelegateFileFilter",
+            "packageName": "org.apache.commons.io.filefilter",
+            "test_ids": [0, 1]
+        }
+    ]
+
+    test_methods_c1 = [
+        {
+            "test_id": 0,
+            "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase",
+            "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)"
+        },
+        {
+            "test_id": 1,
+            "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase",
+            "method_name": "testFileCleanerDirectory_ForceStrategy(org.apache.commons.io.FileCleaningTrackerTestCase)"
+        }
+    ]
+
+    prod_methods_c2 = [
+        {
+            "methodName": "write",
+            "methodDecl": "void write()",
+            "className": "IOUtils",
+            "packageName": "org.apache.commons.io",
+            "test_ids": [1]
+        },
+        {
+            "methodName": "toString",
+            "methodDecl": "String toString()",
+            "className": "DelegateFileFilter",
+            "packageName": "org.apache.commons.io.filefilter",
+            "test_ids": [0, 1]
+        }
+    ]
+
+    test_methods_c2 = [
+        {
+            "test_id": 0,
+            "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase",
+            "method_name": "testFileCleanerDirectory_ForceStrategy(org.apache.commons.io.FileCleaningTrackerTestCase)"
+        },
+        {
+            "test_id": 1,
+            "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase",
+            "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)"
+        }
+    ]
+
+
+    coverage_handler.add_project_coverage(project_id, commit_id1, prod_methods_c1, test_methods_c1)
+    coverage_handler.add_project_coverage(project_id, commit_id2, prod_methods_c2, test_methods_c2)
+
+    # When: requesting the data
+    coverage_1 = coverage_handler.get_project_coverage(commit_id1)
+    coverage_2 = coverage_handler.get_project_coverage(commit_id2)
+
+    assert coverage_1 == coverage_2
