@@ -7,7 +7,7 @@ from json import JSONEncoder
 from numpy import savetxt
 from typing import List, Dict
 from spidertools.process_data.metrics.method import Method, create_method_history_pairs
-from spidertools.process_data.metrics.coverage_metrics import LineCoverage, MethodCoverage, PerTestCaseCoverageMap
+from spidertools.process_data.metrics.coverage_metrics import LineCoverage, MethodCoverage
 
 class MethodEncoder(JSONEncoder):
         def default(self, o):
