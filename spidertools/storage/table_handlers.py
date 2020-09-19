@@ -1,4 +1,5 @@
 import sqlite3
+import sys
 from typing import Dict
 
 # Abstact class
@@ -111,11 +112,13 @@ class ProductionMethodTableHandler(TableHandler):
 
         CREATE_METHOD_TABLE = """
         CREATE TABLE IF NOT EXISTS ProductionMethods (
+            method_id INTEGER,
+            project_id INTEGER,
             method_name TEXT,
             method_decl TEXT,
             class_name TEXT,
             package_name TEXT,
-            PRIMARY KEY ( method_name, method_decl, class_name, package_name )
+            PRIMARY KEY ( project_id, method_name, method_decl, class_name, package_name )
         );
         """
 
@@ -132,11 +135,18 @@ class ProductionMethodTableHandler(TableHandler):
         self.create(CREATE_METHOD_TABLE)
         self.create(CREATE_COMMIT_METHODS_TABLE)
 
-    def add_production_method(self, method_name: str, method_decl: str, class_name: str, package_name: str, commit_id: int):
+    def add_production_method(self, project_id: int, commit_id: int, method_name: str, method_decl: str, class_name: str, package_name: str):
+        # sys.maxsize + 1 is added so all numbers are positive numbers.
+        method_id = hash((project_id, method_name, method_decl, class_name, package_name))  % ((sys.maxsize + 1) )
+
         try:
-            method_id = self.insert('''INSERT INTO ProductionMethods( method_name, method_decl, class_name, package_name ) VALUES (?, ?, ?, ?) ''', (method_name, method_decl, class_name, package_name))
+            self.insert('''
+                INSERT INTO ProductionMethods( method_id, project_id, method_name, method_decl, class_name, package_name ) 
+                VALUES (?, ?, ?, ?, ?, ?) ''', 
+                (method_id, project_id, method_name, method_decl, class_name, package_name)
+            )
         except:
-            method_id = self.get_method_id(method_name, method_decl, class_name, package_name)['rowid']
+            pass
 
         try:
             self.insert ('''INSERT INTO CommitMethodLinkTable ( method_id, commit_id ) VALUES (?, ?) ''', (method_id, commit_id))
@@ -144,20 +154,21 @@ class ProductionMethodTableHandler(TableHandler):
             pass
         return method_id
 
-    def get_method_id(self, method_name, method_decl, class_name, package_name):
+    def get_method_id(self, project_id, method_name, method_decl, class_name, package_name):
         return self.select('''
             SELECT rowid FROM ProductionMethods 
-            WHERE method_name=? 
+            WHERE project_id=?
+                AND method_name=? 
                 AND method_decl=?
                 AND class_name=?
                 AND package_name=?        
-        ''', (method_name, method_decl, class_name, package_name))
+        ''', (project_id, method_name, method_decl, class_name, package_name))
     
     def get_all_methods(self, commit_id):
         return self.select_all('''
-            SELECT method_id, method_name, method_decl, class_name, package_name FROM ProductionMethods
+            SELECT ProductionMethods.method_id, method_name, method_decl, class_name, package_name FROM ProductionMethods
             INNER JOIN CommitMethodLinkTable
-            ON ProductionMethods.rowid=CommitMethodLinkTable.method_id
+            ON ProductionMethods.method_id=CommitMethodLinkTable.method_id
             WHERE commit_id=?
         ''', (commit_id, ))
 
@@ -167,8 +178,11 @@ class TestMethodTableHandler(TableHandler):
 
         CREATE_TEST_METHOD_TABLE = """
         CREATE TABLE IF NOT EXISTS TestMethods (
-            test_id INTEGER PRIMARY KEY,
-            test_name TEXT
+            test_id INTEGER UNIQUE,
+            project_id INTEGER,
+            method_name TEXT,
+            class_name TEXT,
+            PRIMARY KEY (project_id, method_name, class_name)
         );
         """
 
@@ -176,7 +190,7 @@ class TestMethodTableHandler(TableHandler):
         CREATE TABLE IF NOT EXISTS CommitTestMethodLinkTable (
             test_id INTEGER,
             commit_id INTEGER,
-            FOREIGN KEY ( test_id ) REFERENCES TestMethods( test_id ),
+            FOREIGN KEY ( test_id ) REFERENCES TestMethods( rowid ),
             FOREIGN KEY ( commit_id ) REFERENCES Commits( commit_id ),
             PRIMARY KEY ( test_id, commit_id)
         );
@@ -185,9 +199,11 @@ class TestMethodTableHandler(TableHandler):
         self.create(CREATE_TEST_METHOD_TABLE)
         self.create(CREATE_COMMIT_TEST_METHOD_LINK_TABLE)
 
-    def add_test_method(self, test_id: int, test_name: str, commit_id: int):
+    def add_test_method(self, project_id: int, commit_id: int, class_name: str, method_name: str):
+        # sys.maxsize + 1 is added so all numbers are positive numbers.
+        test_id = hash((project_id, method_name, class_name)) % ((sys.maxsize + 1))
         try:
-            test_id = self.insert('''INSERT INTO TestMethods( test_id, test_name ) VALUES (?, ?) ''', (test_id, test_name))
+            self.insert('''INSERT INTO TestMethods( test_id, project_id, method_name, class_name ) VALUES (?, ?, ?, ?) ''', (test_id, project_id, method_name, class_name))
         except:
             pass
 
@@ -198,9 +214,17 @@ class TestMethodTableHandler(TableHandler):
         
         return test_id
 
+    def get_test_method_id(self, project_id, test_name, class_name):
+        return self.select('''
+            SELECT test_id FROM TestMethods
+            WHERE project_id=?
+            test_name=?
+            class_name=?
+            ''', (project_id, test_name, class_name))
+
     def get_all_methods(self, commit_id):
         return self.select_all('''
-            SELECT TestMethods.test_id, test_name FROM TestMethods
+            SELECT TestMethods.test_id, method_name, class_name FROM TestMethods
             INNER JOIN CommitTestMethodLinkTable
             ON TestMethods.test_id=CommitTestMethodLinkTable.test_id
             WHERE commit_id=?
@@ -248,16 +272,22 @@ class MethodCoverageHandler():
         for method in test_methods:
             # TODO: test methods should be described my class name + method name.
             # PROBLEM: we currently map 'global' method_id to 'local' test_id (unique per commit), so create a map of local test_id to global test_id store only global ID in database.
-            global_test_id = self.test_method_table.add_test_method(method["class_name"], method["test_name"], project_id)
-
-            if (test_id := method["test_id"]) is not None and test_id in test_id_map:
-                test_id_map[test_id] = global_test_id
+            global_test_id = self.test_method_table.add_test_method(project_id, commit_id, method["method_name"], method["class_name"])
+            
+            test_id_map[method['test_id']] = global_test_id
+            # if (test_id := method["test_id"]) is not None and test_id in test_id_map:
+            #     test_id_map[test_id] = global_test_id
 
         for method in prod_methods:
-            prod_method_id = self.prod_method_table.add_production_method(method["methodName"], method["methodDecl"], method["className"], method["packageName"], commit_id)
+            prod_method_id = self.prod_method_table.add_production_method(project_id, commit_id, method["methodName"], method["methodDecl"], method["className"], method["packageName"])
 
             for test_id in method['test_ids']:
-                self.cov_method_table.add_coverage(prod_method_id, test_id, commit_id)
+                if test_id in test_id_map:
+                    self.cov_method_table.add_coverage(prod_method_id, test_id_map[test_id], commit_id)
+                elif (len(test_methods)) == 0:
+                    continue
+                else:
+                    exit(1)
 
     def get_project_coverage(self, commit_id: int):
         return {
@@ -265,3 +295,8 @@ class MethodCoverageHandler():
             'tests': self.test_method_table.get_all_methods(commit_id),
             'links': self.cov_method_table.get_all_coverage(commit_id)
         }
+
+    def close(self):
+        self.prod_method_table.close()
+        self.test_method_table.close()
+        self.cov_method_table.close()
