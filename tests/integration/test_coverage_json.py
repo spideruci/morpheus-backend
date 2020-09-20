@@ -9,7 +9,7 @@ class TacocoParsingIntegrationTest(unittest.TestCase):
         self.project_handler = ProjectTableHandler(DB_PATH)
         self.commit_handler = CommitTableHandler(DB_PATH)
         self.coverage_handler = MethodCoverageHandler(DB_PATH)
-        self.resource_dir = f'.{os.path.sep}tests{os.path.sep}integration{os.path.sep}resources{os.path.sep}'
+        self.resource_dir = f'.{os.path.sep}tests{os.path.sep}resources{os.path.sep}'
 
     def test_creating_method_coverage_file_jsoup(self):
         # Given:    
