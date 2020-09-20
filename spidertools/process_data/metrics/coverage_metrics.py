@@ -121,6 +121,7 @@ class PerTestCaseCoverageMap():
             packageName = method.packageName
 
             for index, test_name in enumerate(self.__test_index):
+                # TODO Verify if this works for all different test name outputs tacoco generates...
                 if (f"[class:{packageName}.{className}]" in test_name) and (f"[method:{methodName}(" in test_name):
                     test_index_date_map[index] = [ datetime.strptime(entry["date"], "%Y-%m-%dT%H:%MZ") for entry in method.history ]
                     break
@@ -132,7 +133,7 @@ class PerTestCaseCoverageMap():
         className = test_method.className
         packageName = test_method.packageName
         for index, test_name in enumerate(self.__test_index):
-
+            # TODO Verify if this works for all different test name outputs tacoco generates...
             if (f"[class:{packageName}.{className}]" in test_name) and (f"[method:{methodName}(" in test_name):
                 return index
         print (f"[class:{packageName}.{className}]", f"[method:{methodName}]")

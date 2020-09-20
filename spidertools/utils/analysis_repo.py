@@ -5,7 +5,7 @@ import os
 from subprocess import Popen
 
 class AnalysisRepo(object):
-    def __init__(self, url: str):
+    def __init__(self, url:str):
         self.url = url
         self.clone_commands = {}
         self.repo: Repo
@@ -15,8 +15,12 @@ class AnalysisRepo(object):
         return self
 
     def __enter__(self):
-        self.target_dir = tempfile.mkdtemp()
-        self._clone()
+        if self.url.startswith("http") or self.url.startswith("https"):
+            self.target_dir = tempfile.mkdtemp()
+            self._clone()
+        else:
+            self.target_dir = self.url
+            self.repo = Repo(self.target_dir)
         return self
 
     def _clone(self):
@@ -29,7 +33,8 @@ class AnalysisRepo(object):
 
     def __exit__(self, ctx_type, ctx_value, ctx_traceback):
         self.close()
-        shutil.rmtree(self.target_dir)
+        if self.url.startswith("http") or self.url.startswith("https"):
+            shutil.rmtree(self.target_dir)
 
     def clean(self):
         p = Popen(["git", "clean", "-fxd"], cwd=self.target_dir)

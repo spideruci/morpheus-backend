@@ -1,5 +1,3 @@
-from pprint import pprint
-
 def sort_by_name(coverage):
     prod_methods = coverage["methods"]
     test_methods = coverage["tests"]

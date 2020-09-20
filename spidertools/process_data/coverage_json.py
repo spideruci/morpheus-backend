@@ -7,7 +7,7 @@ from json import JSONEncoder
 from numpy import savetxt
 from typing import List, Dict
 from spidertools.process_data.metrics.method import Method, create_method_history_pairs
-from spidertools.process_data.metrics.coverage_metrics import LineCoverage, MethodCoverage, PerTestCaseCoverageMap
+from spidertools.process_data.metrics.coverage_metrics import LineCoverage, MethodCoverage
 
 class MethodEncoder(JSONEncoder):
         def default(self, o):
@@ -81,6 +81,7 @@ def coverage_json(methods_path, coverage_path, commit_sha):
     for method_index, p_method in enumerate(prod_methods):
         production_output.append({
             "methodName": p_method.methodName,
+            "methodDecl": p_method.methodDecl,
             "className": p_method.className,
             "packageName": p_method.packageName,
             "test_ids": list(method_coverage.get_tests_testing(p_method)),

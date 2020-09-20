@@ -28,10 +28,9 @@ class TacocoRunner():
         # which causes problems for a rerun for some checks (apache-rat-plugin).
         p = Popen(["rm", "tacoco.cp"], cwd=self.project_path)
         p.wait()
-        
-        # TODO create a better way to compile the projects
-        # TODO is this really necessary: -Danimal.sniffer.skip=True ??
-        p = Popen([f"mvn compile test-compile"], cwd=self.project_path, shell=True)
+
+        # TODO Make use of the tacoco build capabilities...
+        p = Popen([f"mvn compile test-compile -Dmaven.compiler.source=11 -Dmaven.compiler.target=11"], cwd=self.project_path, shell=True)
         return p.wait()
 
     def run(self):
