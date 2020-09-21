@@ -62,6 +62,13 @@ class AnalysisRepo(object):
             return self.target_dir.split(os.path.sep)[-2]
         else:
             return project_name
+    
+    def archive(self, output):
+        if not self.repo.bare:
+            self.repo.archive(output)
+        else:
+            print("project doesn't contain any commits...")
+            exit(1)
 
     def iterate_tagged_commits(self, max_commits=-1) -> Tag:
         git: Git = self.repo.git
