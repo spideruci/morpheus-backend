@@ -80,13 +80,13 @@ class StorageIntegrationTest(unittest.TestCase):
         ]
 
         test_methods1 = [
-            {"test_id": 1, "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase", "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)"},
-            {"test_id": 0, "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase", "method_name": "testFileCleanerDirectory_ForceStrategy(org.apache.commons.io.FileCleaningTrackerTestCase)"}
+            {"test_id": 1, "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase", "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)", "test_result": True},
+            {"test_id": 0, "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase", "method_name": "testFileCleanerDirectory_ForceStrategy(org.apache.commons.io.FileCleaningTrackerTestCase)", "test_result": True}
         ]
 
         test_methods2 = [
-            {"test_id": 0, "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase", "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)"},
-            {"test_id": 1, "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase", "method_name": "testFileCleanerDirectory_ForceStrategy(org.apache.commons.io.FileCleaningTrackerTestCase)"}
+            {"test_id": 0, "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase", "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)", "test_result": True},
+            {"test_id": 1, "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase", "method_name": "testFileCleanerDirectory_ForceStrategy(org.apache.commons.io.FileCleaningTrackerTestCase)", "test_result": True}
         ]
 
         self.coverage_handler.add_project_coverage(project_id, commit_id1, prod_methods1, test_methods1)
@@ -124,12 +124,14 @@ class StorageIntegrationTest(unittest.TestCase):
             {
                 "test_id": 0,
                 "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase",
-                "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)"
+                "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)",
+                "test_result": True
             },
             {
                 "test_id": 1,
                 "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase",
-                "method_name": "testFileCleanerDirectory_ForceStrategy(org.apache.commons.io.FileCleaningTrackerTestCase)"
+                "method_name": "testFileCleanerDirectory_ForceStrategy(org.apache.commons.io.FileCleaningTrackerTestCase)",
+                "test_result": True
             }
         ]
 
@@ -167,12 +169,14 @@ class StorageIntegrationTest(unittest.TestCase):
             {
                 "test_id": 0,
                 "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase",
-                "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)"
+                "method_name": "testFileCleanerDirectory(org.apache.commons.io.FileCleaningTrackerTestCase)",
+                "test_result": True
             },
             {
                 "test_id": 1,
                 "class_name": "org.apache.commons.io.FileCleaningTrackerTestCase",
-                "method_name": "testFileCleanerDirectory_ForceStrategy(org.apache.commons.io.FileCleaningTrackerTestCase)"
+                "method_name": "testFileCleanerDirectory_ForceStrategy(org.apache.commons.io.FileCleaningTrackerTestCase)",
+                "test_result": True
             }
         ]
 

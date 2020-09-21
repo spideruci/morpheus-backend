@@ -190,6 +190,7 @@ class TestMethodTableHandler(TableHandler):
         CREATE TABLE IF NOT EXISTS CommitTestMethodLinkTable (
             test_id INTEGER,
             commit_id INTEGER,
+            test_result BOOLEAN,
             FOREIGN KEY ( test_id ) REFERENCES TestMethods( rowid ),
             FOREIGN KEY ( commit_id ) REFERENCES Commits( commit_id ),
             PRIMARY KEY ( test_id, commit_id)
@@ -199,7 +200,7 @@ class TestMethodTableHandler(TableHandler):
         self.create(CREATE_TEST_METHOD_TABLE)
         self.create(CREATE_COMMIT_TEST_METHOD_LINK_TABLE)
 
-    def add_test_method(self, project_id: int, commit_id: int, class_name: str, method_name: str):
+    def add_test_method(self, project_id: int, commit_id: int, class_name: str, method_name: str, test_result: bool):
         # sys.maxsize + 1 is added so all numbers are positive numbers.
         test_id = hash((project_id, method_name, class_name)) % ((sys.maxsize + 1))
         try:
@@ -208,7 +209,7 @@ class TestMethodTableHandler(TableHandler):
             pass
 
         try:
-            self.insert('''INSERT INTO CommitTestMethodLinkTable ( test_id, commit_id ) VALUES (?, ?) ''', (test_id, commit_id))
+            self.insert('''INSERT INTO CommitTestMethodLinkTable ( test_id, commit_id, test_result ) VALUES (?, ?, ?) ''', (test_id, commit_id, test_result))
         except:
             pass
         
@@ -224,7 +225,7 @@ class TestMethodTableHandler(TableHandler):
 
     def get_all_methods(self, commit_id):
         return self.select_all('''
-            SELECT TestMethods.test_id, method_name, class_name FROM TestMethods
+            SELECT TestMethods.test_id, method_name, class_name, CommitTestMethodLinkTable.test_result FROM TestMethods
             INNER JOIN CommitTestMethodLinkTable
             ON TestMethods.test_id=CommitTestMethodLinkTable.test_id
             WHERE commit_id=?
@@ -272,7 +273,7 @@ class MethodCoverageHandler():
         for method in test_methods:
             # TODO: test methods should be described my class name + method name.
             # PROBLEM: we currently map 'global' method_id to 'local' test_id (unique per commit), so create a map of local test_id to global test_id store only global ID in database.
-            global_test_id = self.test_method_table.add_test_method(project_id, commit_id, method["method_name"], method["class_name"])
+            global_test_id = self.test_method_table.add_test_method(project_id, commit_id, method["method_name"], method["class_name"], method["test_result"])
             
             test_id_map[method['test_id']] = global_test_id
             # if (test_id := method["test_id"]) is not None and test_id in test_id_map:

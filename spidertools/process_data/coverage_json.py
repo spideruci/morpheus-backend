@@ -46,10 +46,14 @@ def parse_test_method(test_method : str):
         print("[ERROR] test_name error: {}".format(test_method))
         method_name = ""
 
+    # Parse if test passed or failed
+    test_result = re.search(r'(_F$)', test_method) is not None
+
     return {
         "test_name": test_method,
         "class_name": class_name,
-        "method_name": method_name
+        "method_name": method_name,
+        "test_result": test_result
     }
 
 def coverage_json(methods_path, coverage_path, commit_sha):
