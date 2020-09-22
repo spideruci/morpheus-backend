@@ -2,8 +2,7 @@ from typing import List, Dict
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import pairwise_distances
 
-
-def sort_by_name(coverage):
+def name(coverage):
     prod_methods: List[Dict] = coverage["methods"]
     test_methods: List[Dict]  = coverage["tests"]
     links: List[Dict] = coverage["links"]
@@ -17,7 +16,7 @@ def sort_by_name(coverage):
         "links": links
     }
 
-def cluster_methods(coverage, threshold=0.1):
+def cluster(coverage, threshold=0.1):
     model = AgglomerativeClustering(distance_threshold=threshold, linkage="average", compute_full_tree=True)
     model.fit_predict(list_of_methods)
 

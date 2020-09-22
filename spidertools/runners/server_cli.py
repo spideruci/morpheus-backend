@@ -4,7 +4,7 @@ import sqlite3
 import yaml
 import json
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
-from spidertools.data.sorting import sort_by_name
+from spidertools.data.sorting import name
 from spidertools.data.processor import ProcessDataBuilder
 from typing import List
 
