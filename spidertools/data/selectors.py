@@ -4,7 +4,7 @@ import spidertools.data.sorting as sorting
 
 def _selector(filter_type, module):
     # Get all filter functions
-    results = getmembers(filtering, isfunction)
+    results = getmembers(module, isfunction)
 
     # Return the actual function connected to the filter type.
     for t, f in results:
@@ -17,5 +17,5 @@ def filter_selector(filter_type):
     return _selector(filter_type, filtering)
 
 
-def sort_selector(filter_type):
-    return _selector(filter_type, sorting)
+def sort_selector(sort_type):
+    return _selector(sort_type, sorting)

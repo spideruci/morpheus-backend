@@ -4,8 +4,8 @@ import sqlite3
 import yaml
 import json
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
-from spidertools.data.sorting import name
 from spidertools.data.processor import ProcessDataBuilder
+from spidertools.data.selectors import filter_selector, sort_selector
 from typing import List
 
 app = Flask(__name__)
@@ -58,55 +58,36 @@ def coverage(project_name, commit_sha):
 
     coverage = coverage_handler.get_project_coverage(commit_id['commit_id'])
 
-    # Set up filter and sort functionality.
-    sort_methods = {
-        "name": sort_by_name,
-
-        # sort production axis
-        "prod_name": lambda x: x,
-
-        # sort test axis
-        "test_name": lambda x: x
-    }
-
-    filter_methods = {
-        # General filters
-
-        # Test filters
-        "result": lambda x: x, # Filter based on if a test passed or failed
-        "num_tests": lambda x: x, # Filter based on number of tests < or > or == (Can be used to filter out methods that have no tests.) (no range)
-        "coverage": lambda x: x, # Filter test methods based on the number of methods they cover.
-
-        # Production filters
-        "cluster": lambda x: x, # Filter out all production methods not belonging to a specific cluster
-        "package": lambda x: x, # Filter out all production methods not part of the specified package
-        "class": lambda x: x, # Filter out all production methods not part of the specified class
-        "method": lambda x: x, # Filter to a specific production method
-    }
-
-    sort_function = None
+    # Filter and sort data using the given parametrs.
+    sort_function = list()
     filter_functions = list()
+
+    filter_functions.append(filter_selector("no_filter"))
+
+    if (f := sort_selector("name")) is not None:
+        sort_function.append(f)
 
     # Get parameters
     # TODO this is not going to work for multiple filters and a single sort where we may have multiple parameters.
     #  - Fix could be to add json to the url as the parameter value of filter and sort.
-    filter_arguments = request.args.get("filters", default="{}", type=str)
-    filter_types: List = json.loads(filter_arguments)
-    sort_type = request.args.get("sorting", default="name")
+    # filter_arguments = request.args.get("filters", default="{}", type=str)
+    # filter_types: List = json.loads(filter_arguments)
+    # sort_type = request.args.get("sorting", default="name")
 
-    # Get the corresponding filter/sort functions
-    if sort_type in sort_methods:
-        sort_function = sort_methods.get(sort_type)
+    # # Get the corresponding filter/sort functions
+    # if sort_type in sort_methods:
+    #     sort_function = sort_methods.get(sort_type)
 
-    # TODO encode the parameters in here as well...
-    for filter_type, parameters in filter_types.items():
-        if filter_type in filter_methods:
-            filter_functions.append(filter_methods.get(filter_type))   
+    # # TODO encode the parameters in here as well...
+    # for filter_type, parameters in filter_types.items():
+    #     if filter_type in filter_methods:
+    #         filter_functions.append(filter_methods.get(filter_type))
+
 
     # filter and sort the data
     coverage = ProcessDataBuilder() \
         .add_filters(filter_functions) \
-        .set_sorter(sort_function) \
+        .add_sorters(sort_function) \
         .process_data(coverage)
 
     return {

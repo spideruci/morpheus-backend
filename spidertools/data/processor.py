@@ -1,29 +1,27 @@
-from typing import List, Callable
+from typing import List, Callable, Dict
 
 class ProcessDataBuilder():
 
     def __init__(self):
-        self._filters = []
-        self._sorter = None
-
-    def add_filter(self, filter: Callable):
-        self._filters.append(filter)
-        return self
+        self._filters: List[Callable] = []
+        self._sorters: List[Callable] = []
 
     def add_filters(self, filters : List[Callable]):
         self._filters.extend(filters)
         return self
 
-    def set_sorter(self, sorter):
-        self._sorter = sorter
+    def add_sorters(self, sorters: List[Callable]):
+        self._sorters.extend(sorters)
         return self
     
-    def process_data(self, data):
-        result = data
+    def process_data(self, data: Dict):
+        result: Dict = data
         for f in self._filters:
-            result = filter(f, result)
+            result: Dict = f(result)
 
-        if self._sorter is not None:
-            result = self._sorter(result)
+        for sort in self._sorters:
+            print(sort)
+            assert result is not None
+            result: Dict = sort(result)
         
         return result
