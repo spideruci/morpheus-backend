@@ -6,8 +6,8 @@ import re
 from json import JSONEncoder
 from numpy import savetxt
 from typing import List, Dict
-from spidertools.process_data.metrics.method import Method, create_method_history_pairs
-from spidertools.process_data.metrics.coverage_metrics import LineCoverage, MethodCoverage
+from spidertools.parsing_data.metrics.method import Method, create_method_history_pairs
+from spidertools.parsing_data.metrics.coverage_metrics import LineCoverage, MethodCoverage
 
 class MethodEncoder(JSONEncoder):
         def default(self, o):
@@ -36,7 +36,7 @@ def parse_test_method(test_method : str):
         method_name = result.group(1)
     elif (result := re.search(r'method:([a-zA-Z0-9._()]+)', test_method)) is not None:
         method_name = result.group(1)
-    elif (result := re.search(r'test-template::([a-zA-Z0-9._()]+)', test_method)) is not None:
+    elif (result := re.search(r'test-template:([a-zA-Z0-9._()]+)', test_method)) is not None:
         method_name = result.group(1)
         invocation_number = re.search(r'test-template-invocation:#([0-9]+)', test_method).group(1)
         method_name = f'{method_name}/{invocation_number}'

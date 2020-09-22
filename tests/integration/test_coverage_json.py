@@ -1,6 +1,6 @@
 import unittest
 import os
-from spidertools.process_data.coverage_json import coverage_json
+from spidertools.parsing_data.coverage_json import coverage_json
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
 
 class TacocoParsingIntegrationTest(unittest.TestCase):

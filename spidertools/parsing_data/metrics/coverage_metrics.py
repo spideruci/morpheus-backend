@@ -1,6 +1,6 @@
 
 from typing import Dict, List, Set
-from spidertools.process_data.metrics.method import Method
+from spidertools.parsing_data.metrics.method import Method
 from datetime import date, datetime
 from pprint import pprint
 

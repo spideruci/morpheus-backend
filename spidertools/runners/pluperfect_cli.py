@@ -5,7 +5,7 @@ import json
 from spidertools.utils.analysis_repo import AnalysisRepo
 from spidertools.tools.tacoco import TacocoRunner
 from spidertools.tools.history import MethodParserRunner
-from spidertools.process_data.coverage_json import coverage_json
+from spidertools.parsing_data.coverage_json import coverage_json
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
 
 # By default the database is only created in memory
