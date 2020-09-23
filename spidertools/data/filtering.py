@@ -8,12 +8,22 @@ def no_filter(coverage: Dict):
     return coverage
 
 # Test filters
-def test_result(coverage: Dict, passed=False):
+def test_result(coverage: Dict, failed=False):
     # Filter based on if a test passed or failed
     logger.warn("Not implemented yet...")
     # Get all test we want to keep based on test result passed
+    coverage["tests"] = list(filter(
+        lambda x: bool(x['test_result']) == failed,
+        coverage["tests"]
+    ))
+
+    test_ids = list(map(lambda x: x['test_id'], coverage["tests"]))
 
     # remove all links that contain those tests (test_id)
+    coverage["links"] = list(filter(
+        lambda x: x['test_id'] in test_ids,
+        coverage["links"]
+    ))
 
     # Update links and tests
     return coverage
@@ -53,7 +63,7 @@ def num_tests(coverage: Dict, threshold=10, compare_type=">"):
     return coverage
 
 
-def coverage(coverage: Dict, threshold=20, compare_type=">"):
+def coverage(coverage: Dict, threshold=0, compare_type=">"):
     # Filter test methods based on the number of methods they cover.
        # Filter based on number of tests < or > or ==
     # (Can be used to filter out methods that have no tests.) (no range)

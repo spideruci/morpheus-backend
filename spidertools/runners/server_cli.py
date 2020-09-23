@@ -62,27 +62,12 @@ def coverage(project_name, commit_sha):
     sort_function = list()
     filter_functions = list()
 
-    filter_functions.append(filter_selector("no_filter"))
+    filter_functions.append(filter_selector("num_tests"))
+    filter_functions.append(filter_selector("coverage"))
+    filter_functions.append(filter_selector("test_result"))
 
     if (f := sort_selector("name")) is not None:
         sort_function.append(f)
-
-    # Get parameters
-    # TODO this is not going to work for multiple filters and a single sort where we may have multiple parameters.
-    #  - Fix could be to add json to the url as the parameter value of filter and sort.
-    # filter_arguments = request.args.get("filters", default="{}", type=str)
-    # filter_types: List = json.loads(filter_arguments)
-    # sort_type = request.args.get("sorting", default="name")
-
-    # # Get the corresponding filter/sort functions
-    # if sort_type in sort_methods:
-    #     sort_function = sort_methods.get(sort_type)
-
-    # # TODO encode the parameters in here as well...
-    # for filter_type, parameters in filter_types.items():
-    #     if filter_type in filter_methods:
-    #         filter_functions.append(filter_methods.get(filter_type))
-
 
     # filter and sort the data
     coverage = ProcessDataBuilder() \
