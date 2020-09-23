@@ -1,6 +1,15 @@
 import sqlite3
 import sys
-from typing import Dict
+from functools import wraps
+from typing import Dict, List, Tuple
+
+def _commit(method):
+    @wraps(method)
+    def wrapper(self, *method_args, **method_kwargs):
+        result = method(self, *method_args, **method_kwargs)
+        self._conn.commit()
+        return result
+    return wrapper
 
 # Abstact class
 class TableHandler():
@@ -32,11 +41,26 @@ class TableHandler():
         else:
             return [dict(row) for row in result]
 
+    @_commit
+    def insert(self, sql, values=tuple()):
+        return self._single_insert(sql, values)
 
-    def insert(self, sql, values=()):
+    @_commit
+    def batch_insert(self, sql, values: List[Tuple]) -> List[int]:
+        row_ids = list()
+        for value in values:
+            try: 
+                row_id = _single_insert(sql, values)
+                row_ids.append(row_id)
+            except:
+                print(f"[Error] failed to insert {value} to database...")
+                continue
+
+        return row_ids
+
+    def _single_insert(self, sql, values=()):
         c = self._conn.cursor()
         c.execute(sql, values)
-        self._conn.commit()
 
         return c.lastrowid
 
@@ -271,8 +295,6 @@ class MethodCoverageHandler():
         test_id_map : Dict = {}
 
         for method in test_methods:
-            # TODO: test methods should be described my class name + method name.
-            # PROBLEM: we currently map 'global' method_id to 'local' test_id (unique per commit), so create a map of local test_id to global test_id store only global ID in database.
             global_test_id = self.test_method_table.add_test_method(project_id, commit_id, method["method_name"], method["class_name"], method["test_result"])
             
             test_id_map[method['test_id']] = global_test_id
