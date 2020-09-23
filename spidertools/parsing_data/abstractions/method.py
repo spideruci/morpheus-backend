@@ -10,7 +10,6 @@ class Method():
         self.filePath = filePath
         self.lineStart = lineStart
         self.lineEnd = lineEnd
-        self.history = history
         self.properties = properties if properties is not None else {}
 
     def set_property(self, key, value):
@@ -21,6 +20,32 @@ class Method():
     
     def __str__(self):
         return f"<Method: {self.methodDecl}, {self.className}, {self.packageName}, now:{self.lineStart}-{self.lineEnd}>"
+
+class ProdMethod():
+    def __init__(self, method_name, method_decl, class_name, package_name, test_ids):
+        self.method_name = method_name
+        self.method_decl = method_decl
+        self.class_name = class_name
+        self.package_name = package_name
+        self.test_ids = test_ids
+
+class TestMethod():
+    def __init__(self, test_id, class_name, method_name, test_result):
+        self.test_id = test_id
+        self.class_name = class_name
+        self.method_name = method_name
+        self.test_result = test_result
+
+class TestEdge():
+    def __init__(self, method_id: int, test_id: int):
+        self._test_id = test_id  # Source
+        self._method_id = method_id  # Target
+
+    def get_test_id(self):
+        return self._test_id
+
+    def get_method_id(self):
+        return self._method_id
 
 def __get_boundary_versions(versions: List[Dict]) -> Tuple[Dict]:
     date_sort = lambda d: datetime.strptime(d, "%Y-%m-%dT%H:%MZ")

@@ -89,13 +89,12 @@ def _analysis(repo, tacoco_runner, parser_runner, output_path):
         commit_sha = repo.get_current_commit()
         commit_id = commit_sha
         project_output_path = f"{output_path}{os.path.sep}{repo.get_project_name()}{os.path.sep}"
-        output = coverage_json(
+
+        return coverage_json(
             f"{project_output_path}methods-{commit_sha}.json",
             f"{project_output_path}{commit_sha}-cov-matrix.json",
             commit_id
         )
-
-        return output
 
 def main():
     print("Start analysis...")

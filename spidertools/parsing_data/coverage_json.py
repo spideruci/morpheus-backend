@@ -6,7 +6,7 @@ import re
 from json import JSONEncoder
 from numpy import savetxt
 from typing import List, Dict
-from spidertools.parsing_data.metrics.method import Method, create_method_history_pairs
+from spidertools.parsing_data.abstractions.method import Method, TestMethod, ProdMethod, create_method_history_pairs
 from spidertools.parsing_data.metrics.coverage_metrics import LineCoverage, MethodCoverage
 
 class MethodEncoder(JSONEncoder):
@@ -50,7 +50,6 @@ def parse_test_method(test_method : str):
     test_result = re.search(r'(_F$)', test_method) is not None
 
     return {
-        "test_name": test_method,
         "class_name": class_name,
         "method_name": method_name,
         "test_result": test_result
@@ -75,27 +74,29 @@ def coverage_json(methods_path, coverage_path, commit_sha):
     line_coverage = LineCoverage(coverage)
     method_coverage = MethodCoverage(line_coverage, prod_methods)
 
-    test_methods = [ {"test_id": test_id, **parse_test_method(test)} for test_id, test in enumerate(coverage["testsIndex"])]
+    test_methods = [ TestMethod(test_id=test_id, **parse_test_method(test)) for test_id, test in enumerate(coverage["testsIndex"])]
 
-    # Now create map between all production and which tests test it.
-    matrix = np.zeros((len(prod_methods), len(test_methods)))
-    header = [f"{p.className}.{p.className}.{p.methodName}" for p in prod_methods]
+    # Create Method objects for all production methods and set the test_ids
+    def convert_methods(method):
+        test_ids = list(method_coverage.get_tests_testing(method))
+        
+        return ProdMethod(
+            method.methodName,
+            method.methodDecl,
+            method.className,
+            method.packageName,
+            test_ids
+        )
+    
+    prod_methods = list(map(
+        convert_methods,
+        prod_methods
+    ))
 
-    production_output : List[Dict] = []
-    for method_index, p_method in enumerate(prod_methods):
-        production_output.append({
-            "methodName": p_method.methodName,
-            "methodDecl": p_method.methodDecl,
-            "className": p_method.className,
-            "packageName": p_method.packageName,
-            "test_ids": list(method_coverage.get_tests_testing(p_method)),
-        })
-
-    output = {
+    # Return the methods.
+    return {
         "methods": {
-            "production": production_output,
+            "production": prod_methods,
             "test": test_methods,
         }
     }
-
-    return output
