@@ -19,16 +19,73 @@ def test_result(coverage: Dict, passed=False):
     return coverage
 
 
-def num_tests(coverage: Dict):
+def num_tests(coverage: Dict, threshold=10, compare_type=">"):
     # Filter based on number of tests < or > or ==
-    # (Can be used to filter out methods that have no tests.) (no range)
-    logger.warn("Not implemented yet...")
+    # (Can be used to filter out methods that have no tests.) (no range)    
+    if (compare_type == '='):
+        compare_method = lambda x: x == threshold
+    elif (compare_type == '>'):
+        compare_method=lambda x: x > threshold
+    else: # <
+          compare_method=lambda x: x < threshold
+
+    methods_ids = []
+    method_id_count: Dict = {}
+    for l in coverage["links"]:
+        method_id = l['method_id']
+        if method_id in method_id_count:
+            method_id_count[method_id] += 1
+        else:
+            method_id_count[method_id] = 1
+        
+        if compare_method(method_id_count[method_id]):
+            methods_ids.append(method_id)
+
+    coverage["methods"] = list(filter(
+        lambda x: x['method_id'] in methods_ids,
+        coverage["methods"]
+    ))
+    coverage["links"] = list(filter(
+        lambda x: x['method_id'] in methods_ids,
+        coverage["links"]
+    ))
+
     return coverage
 
 
-def coverage(coverage: Dict):
+def coverage(coverage: Dict, threshold=20, compare_type=">"):
     # Filter test methods based on the number of methods they cover.
+       # Filter based on number of tests < or > or ==
+    # (Can be used to filter out methods that have no tests.) (no range)
     logger.warn("Not implemented yet...")
+    
+    if (compare_type == '='):
+        compare_method = lambda x: x == threshold
+    elif (compare_type == '>'):
+        compare_method=lambda x: x > threshold
+    else: # <
+          compare_method=lambda x: x < threshold
+
+    test_ids = []
+    test_id_count: Dict = {}
+    for l in coverage["links"]:
+        test_id = l['test_id']
+        if test_id in test_id_count:
+            test_id_count[test_id] += 1
+        else:
+            test_id_count[test_id] = 1
+        
+        if compare_method(test_id_count[test_id]):
+            test_ids.append(test_id)
+
+    coverage["tests"] = list(filter(
+        lambda x: x['test_id'] in test_ids,
+        coverage["tests"]
+    ))
+    coverage["links"] = list(filter(
+        lambda x: x['test_id'] in test_ids,
+        coverage["links"]
+    ))
     return coverage
 
 
