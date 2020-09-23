@@ -63,7 +63,7 @@ def coverage(project_name, commit_sha):
     filter_functions = list()
 
     filter_functions.append(filter_selector("num_tests"))
-    filter_functions.append(filter_selector("coverage"))
+    filter_functions.append(filter_selector("test_coverage"))
     filter_functions.append(filter_selector("test_result"))
 
     if (f := sort_selector("name")) is not None:

@@ -9,8 +9,9 @@ def no_filter(coverage: Dict):
 
 # Test filters
 def test_result(coverage: Dict, failed=False):
-    # Filter based on if a test passed or failed
-    logger.warn("Not implemented yet...")
+    """
+    Filter based on if a test passed or failed
+    """
     # Get all test we want to keep based on test result passed
     coverage["tests"] = list(filter(
         lambda x: bool(x['test_result']) == failed,
@@ -30,8 +31,10 @@ def test_result(coverage: Dict, failed=False):
 
 
 def num_tests(coverage: Dict, threshold=10, compare_type=">"):
-    # Filter based on number of tests < or > or ==
-    # (Can be used to filter out methods that have no tests.) (no range)    
+    """
+    Filter based on number of tests < or > or ==
+    (Can be used to filter out methods that have no tests.) (no range)
+    """
     if (compare_type == '='):
         compare_method = lambda x: x == threshold
     elif (compare_type == '>'):
@@ -63,12 +66,10 @@ def num_tests(coverage: Dict, threshold=10, compare_type=">"):
     return coverage
 
 
-def coverage(coverage: Dict, threshold=0, compare_type=">"):
-    # Filter test methods based on the number of methods they cover.
-       # Filter based on number of tests < or > or ==
-    # (Can be used to filter out methods that have no tests.) (no range)
-    logger.warn("Not implemented yet...")
-    
+def test_coverage(coverage: Dict, threshold=0, compare_type=">"):
+    """
+    Filter test methods based on the number of methods they cover.
+    """
     if (compare_type == '='):
         compare_method = lambda x: x == threshold
     elif (compare_type == '>'):
