@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from datetime import datetime
 
 class Method():
@@ -41,10 +41,10 @@ class TestEdge():
         self._test_id = test_id  # Source
         self._method_id = method_id  # Target
 
-    def get_test_id(self):
+    def get_test_id(self) -> int:
         return self._test_id
 
-    def get_method_id(self):
+    def get_method_id(self) -> int:
         return self._method_id
 
 def __get_boundary_versions(versions: List[Dict]) -> Tuple[Dict]:
@@ -53,7 +53,7 @@ def __get_boundary_versions(versions: List[Dict]) -> Tuple[Dict]:
     then, now = versions.remove(0), versions.pop()
     return then, now
 
-def __get_version(versions: List[Dict], sha: str):
+def __get_version(versions: List[Dict], sha: str) -> Optional[Dict]:
     try:
         return next((version for version in versions if 'commitId' in version and version["commitId"] == sha), versions[-1])
     except KeyError as e:

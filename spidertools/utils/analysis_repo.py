@@ -3,11 +3,12 @@ import tempfile
 import shutil
 import os
 from subprocess import Popen
+from typing import Dict
 
 class AnalysisRepo(object):
     def __init__(self, url:str):
         self.url = url
-        self.clone_commands = {}
+        self.clone_commands : Dict = {}
         self.repo: Repo
 
     def set_depth(self, depth: int) -> 'AnalysisRepo':

@@ -1,5 +1,5 @@
 
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
 from spidertools.parsing_data.abstractions.method import Method
 from datetime import date, datetime
 from pprint import pprint
@@ -23,7 +23,7 @@ class LineCoverage():
             if activating_tests is not None and len(activating_tests) == 0:
                 print("[Error] No activating test cases where found...")
 
-            line_cov_dict = dict()
+            line_cov_dict: Dict[int, List[int]] = dict()
             for test_id, lines in zip(activating_tests, test_stmt_matrix):
                 for i, line in enumerate(lines):
                     if line:
@@ -128,7 +128,7 @@ class PerTestCaseCoverageMap():
 
         return test_index_date_map
     
-    def get_test_index(self, test_method: Method) -> int:
+    def get_test_index(self, test_method: Method) -> Optional[int]:
         methodName = test_method.methodName
         className = test_method.className
         packageName = test_method.packageName

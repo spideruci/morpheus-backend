@@ -35,7 +35,7 @@ def list_commits_of_project(project_name):
         return {"Error": f"Project '{project_name}' was not found..."}, 404
 
     commit_handler = CommitTableHandler(DATABASE_PATH)
-    if (commits := commit_handler.get_all_commits(project_id["project_id"])) is None:
+    if (commits := commit_handler.get_all_commits(project_id)) is None:
         return {"Error": f"No commits for '{project_name}' were not found..."}, 404
 
     return {
@@ -53,10 +53,10 @@ def coverage(project_name, commit_sha):
     if (project_id := project_handler.get_project_id(project_name)) is None:
         return {"Error": f"Project '{project_name}' not found..."}, 404
 
-    if (commit_id := commit_handler.get_commit_id(project_id['project_id'], commit_sha)) is None:
+    if (commit_id := commit_handler.get_commit_id(project_id, commit_sha)) is None:
         return {"Error": f"No commit '{commit_sha}' found in project: '{project_name}'..."}, 404
 
-    coverage = coverage_handler.get_project_coverage(commit_id['commit_id'])
+    coverage = coverage_handler.get_project_coverage(commit_id)
 
     # Filter and sort data using the given parametrs.
     sort_function = list()

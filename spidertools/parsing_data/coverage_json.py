@@ -79,7 +79,7 @@ def coverage_json(methods_path, coverage_path, commit_sha):
     # Create Method objects for all production methods and set the test_ids
     def convert_methods(method):
         test_ids = list(method_coverage.get_tests_testing(method))
-        
+
         return ProdMethod(
             method.methodName,
             method.methodDecl,
@@ -87,7 +87,7 @@ def coverage_json(methods_path, coverage_path, commit_sha):
             method.packageName,
             test_ids
         )
-    
+
     prod_methods = list(map(
         convert_methods,
         prod_methods

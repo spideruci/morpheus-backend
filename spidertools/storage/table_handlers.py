@@ -30,17 +30,17 @@ class TableHandler():
         else:
             return [dict(row) for row in result]
 
-    def insert(self, sql, values=tuple()):
+    def insert(self, sql, values=tuple()) -> bool:
         with self._conn:
             self._conn.execute(sql, values)
 
             return True
         return False
 
-    def batch_insert(self, sql, values: List[Tuple]) -> List[int]:
+    def batch_insert(self, sql, values: List[Tuple]) -> bool:
         row_ids = list()
-        with self.conn:
-            self.conn.executemany(sql, values)
+        with self._conn:
+            self._conn.executemany(sql, values)
             return True
         return False
 
@@ -60,14 +60,14 @@ class ProjectTableHandler(TableHandler):
 
         self.create(CREATE_TABLE)
 
-    def add_project(self, project_name):
+    def add_project(self, project_name) -> int:
         self.insert('''INSERT INTO Projects( project_name ) VALUES (?) ''', (project_name, ))
         return self.get_project_id(project_name)
 
     def get_project_id(self, project_name) -> int:
         return self.select('''SELECT project_id FROM Projects WHERE project_name=?''', (project_name, ))['project_id']
 
-    def get_projects(self):
+    def get_projects(self) -> Dict:
         return self.select_all('''SELECT project_name FROM Projects''')
 
 class CommitTableHandler(TableHandler):
@@ -84,14 +84,14 @@ class CommitTableHandler(TableHandler):
 
         self.create(CREATE_TABLE)
 
-    def add_commit(self, project_id, commit_sha):
+    def add_commit(self, project_id, commit_sha) -> int:
         self.insert('''INSERT INTO Commits( project_id, commit_sha ) VALUES (?, ?) ''', (project_id, commit_sha))
         return self.get_commit_id(project_id, commit_sha)
 
-    def get_commit_id(self, project_id, commit_sha):
+    def get_commit_id(self, project_id, commit_sha) -> int:
         return self.select('''SELECT commit_id FROM Commits WHERE project_id=? AND commit_sha=?''', (project_id, commit_sha))['commit_id']
 
-    def get_all_commits(self, project_id:int):
+    def get_all_commits(self, project_id: int) -> Dict:
         return self.select_all('''SELECT commit_sha FROM Commits WHERE project_id=?''', (int(project_id),))
 
 class BuildTableHandler(TableHandler):
@@ -109,12 +109,12 @@ class BuildTableHandler(TableHandler):
 
         self.create(CREATE_TABLE)
 
-    def add_build_result(self, commit_id: int, build_passed: bool):
+    def add_build_result(self, commit_id: int, build_passed: bool) -> bool:
         self.insert('''INSERT INTO BuildResults( commit_id, build_passed ) VALUES (?, ?) ''', (commit_id, build_passed))
         return self.get_build_result(commit_id)['build_passed']
 
-    def get_build_result(self, commit_id: int):
-        return self.select('''SELECT commit_id, build_passed FROM BuildResults WHERE commit_id=?''', (commit_id, ))
+    def get_build_result(self, commit_id: int) -> bool:
+        return bool(self.select('''SELECT build_passed FROM BuildResults WHERE commit_id=?''', (commit_id, ))['build_passed'])
 
 class ProductionMethodTableHandler(TableHandler):
     def __init__(self, database_location):
@@ -145,7 +145,7 @@ class ProductionMethodTableHandler(TableHandler):
         self.create(CREATE_METHOD_TABLE)
         self.create(CREATE_COMMIT_METHODS_TABLE)
 
-    def add_production_method(self, project_id: int, commit_id: int, method: ProdMethod):
+    def add_production_method(self, project_id: int, commit_id: int, method: ProdMethod) -> int:
         # sys.maxsize + 1 is added so all numbers are positive numbers.
         method_id = hash((project_id, method.method_name, method.method_decl,
                           method.class_name, method.package_name)) % ((sys.maxsize + 1))
@@ -154,19 +154,21 @@ class ProductionMethodTableHandler(TableHandler):
             self.insert('''
                 INSERT INTO ProductionMethods( method_id, project_id, method_name, method_decl, class_name, package_name ) 
                 VALUES (?, ?, ?, ?, ?, ?) ''', 
-                        (method_id, project_id, method.method_name,
-                         method.method_decl, method.class_name, method.package_name)
+                (method_id, project_id, method.method_name,method.method_decl, method.class_name, method.package_name)
             )
         except:
             pass
 
         try:
-            self.insert ('''INSERT INTO CommitMethodLinkTable ( method_id, commit_id ) VALUES (?, ?) ''', (method_id, commit_id))
+            self.insert (
+                '''INSERT INTO CommitMethodLinkTable ( method_id, commit_id ) VALUES (?, ?) ''',
+                (method_id, commit_id)
+            )
         except:
             pass
         return method_id
 
-    def get_method_id(self, project_id, method):
+    def get_method_id(self, project_id, method) -> int:
         return self.select('''
             SELECT rowid FROM ProductionMethods 
             WHERE project_id=?
@@ -176,7 +178,8 @@ class ProductionMethodTableHandler(TableHandler):
                 AND package_name=?        
         ''', (project_id, method.method_name, method.method_decl, method.class_name, method.package_name))
     
-    def get_all_methods(self, commit_id):
+    def get_all_methods(self, commit_id) -> List[Dict]:
+        # TODO convert the dictionaries to ProdMethod
         return self.select_all('''
             SELECT ProductionMethods.method_id, method_name, method_decl, class_name, package_name FROM ProductionMethods
             INNER JOIN CommitMethodLinkTable
@@ -212,7 +215,7 @@ class TestMethodTableHandler(TableHandler):
         self.create(CREATE_TEST_METHOD_TABLE)
         self.create(CREATE_COMMIT_TEST_METHOD_LINK_TABLE)
 
-    def add_test_method(self, project_id: int, commit_id: int, test_method: TestMethod):
+    def add_test_method(self, project_id: int, commit_id: int, test_method: TestMethod) -> int:
         # sys.maxsize + 1 is added so all numbers are positive numbers.
         test_id = hash((
             project_id,
@@ -232,7 +235,7 @@ class TestMethodTableHandler(TableHandler):
         
         return test_id
 
-    def get_test_method_id(self, project_id, test_name, class_name):
+    def get_test_method_id(self, project_id, test_name, class_name) -> int:
         return self.select('''
             SELECT test_id FROM TestMethods
             WHERE project_id=?
@@ -240,7 +243,8 @@ class TestMethodTableHandler(TableHandler):
             class_name=?
             ''', (project_id, test_name, class_name))
 
-    def get_all_methods(self, commit_id):
+    def get_all_methods(self, commit_id) -> List[Dict]:
+        # TODO convert the dictionaries to TestMethod
         return self.select_all('''
             SELECT TestMethods.test_id, method_name, class_name, CommitTestMethodLinkTable.test_result FROM TestMethods
             INNER JOIN CommitTestMethodLinkTable
@@ -277,7 +281,8 @@ class MethodCoverageTableHandler(TableHandler):
         except:
             print("[ERROR] something went wrong when inserting the coverage data.")
 
-    def get_all_coverage(self, commit_id):
+    def get_all_coverage(self, commit_id) -> List[Dict]:
+        # TODO convert the dictionaries to an abstraction, e.g., TestEdges or something similar
         return self.select_all('''
         SELECT method_id, test_id FROM MethodCoverage
         WHERE commit_id=?
@@ -315,7 +320,7 @@ class MethodCoverageHandler():
                 else:
                     exit(1)
 
-    def get_project_coverage(self, commit_id: int):
+    def get_project_coverage(self, commit_id: int) -> Dict:
         return {
             'methods': self.prod_method_table.get_all_methods(commit_id),
             'tests': self.test_method_table.get_all_methods(commit_id),
