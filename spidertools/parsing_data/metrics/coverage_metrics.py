@@ -9,8 +9,13 @@ class LineCoverage():
         self.line_coverage = self.__compute_coverage(coverage)
 
     def __compute_coverage(self, coverage) -> Dict:
+        """
+        Create a map between files and a map that contain as key: line number
+        and value a list of test_id that covered that line in that file.
+        """
         lines_covered = dict()
-    
+
+        # Iterate through the tacoco output and create a map for files and which lines are covered by which test
         for line_coverage in coverage['sources']:
             source = line_coverage['source']
             fullname = source['fullName']
@@ -20,9 +25,13 @@ class LineCoverage():
             activating_tests = line_coverage['activatingTests']
             test_stmt_matrix = line_coverage['testStmtMatrix']
 
-            if activating_tests is not None and len(activating_tests) == 0:
-                print("[Error] No activating test cases where found...")
+            # Check if there are any activating test cases for the current class
+            if activating_tests is not None:
+                print(f"[Debug] this shouldn't happen:  {line_coverage}")
+            elif len(activating_tests) == 0:
+                print(f"[Info] '{fullname}' was not covered...")
 
+            # Create a map between each line and which test case it is covered by.
             line_cov_dict: Dict[int, List[int]] = dict()
             for test_id, lines in zip(activating_tests, test_stmt_matrix):
                 for i, line in enumerate(lines):
