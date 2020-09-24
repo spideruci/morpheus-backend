@@ -34,10 +34,8 @@ def start(project_url, output_path, tacoco_path, history_slider_path, single_run
 
     with AnalysisRepo(project_url) as repo:
         # Add project
-        if (project_entry := project_handler.get_project_id(repo.get_project_name())) is None:
+        if (project_id := project_handler.get_project_id(repo.get_project_name())) is None:
             project_id: int = project_handler.add_project(repo.get_project_name())
-        else:
-            project_id = project_entry['project_id']
         
         # Analysis tools
         tacoco_runner = TacocoRunner(repo, output_path, tacoco_path)

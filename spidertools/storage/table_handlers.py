@@ -65,7 +65,10 @@ class ProjectTableHandler(TableHandler):
         return self.get_project_id(project_name)
 
     def get_project_id(self, project_name) -> int:
-        return self.select('''SELECT project_id FROM Projects WHERE project_name=?''', (project_name, ))['project_id']
+        if (result := self.select('''SELECT project_id FROM Projects WHERE project_name=?''', (project_name, ))) is not None:
+            return result['project_id']
+        else:
+            return None
 
     def get_projects(self) -> Dict:
         return self.select_all('''SELECT project_name FROM Projects''')
@@ -89,7 +92,10 @@ class CommitTableHandler(TableHandler):
         return self.get_commit_id(project_id, commit_sha)
 
     def get_commit_id(self, project_id, commit_sha) -> int:
-        return self.select('''SELECT commit_id FROM Commits WHERE project_id=? AND commit_sha=?''', (project_id, commit_sha))['commit_id']
+        if (result := self.select('''SELECT commit_id FROM Commits WHERE project_id=? AND commit_sha=?''', (project_id, commit_sha))) is not None:
+            return result['commit_id']
+        else:
+            return None
 
     def get_all_commits(self, project_id: int) -> Dict:
         return self.select_all('''SELECT commit_sha FROM Commits WHERE project_id=?''', (int(project_id),))
@@ -114,7 +120,10 @@ class BuildTableHandler(TableHandler):
         return self.get_build_result(commit_id)['build_passed']
 
     def get_build_result(self, commit_id: int) -> bool:
-        return bool(self.select('''SELECT build_passed FROM BuildResults WHERE commit_id=?''', (commit_id, ))['build_passed'])
+        if (result := self.select('''SELECT build_passed FROM BuildResults WHERE commit_id=?''', (commit_id, ))) is not None:
+            return bool(result['build_passed'])
+        else:
+            return None
 
 class ProductionMethodTableHandler(TableHandler):
     def __init__(self, database_location):
