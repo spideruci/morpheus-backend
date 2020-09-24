@@ -26,7 +26,7 @@ class LineCoverage():
             test_stmt_matrix = line_coverage['testStmtMatrix']
 
             # Check if there are any activating test cases for the current class
-            if activating_tests is not None:
+            if activating_tests is None:
                 print(f"[Debug] this shouldn't happen:  {line_coverage}")
             elif len(activating_tests) == 0:
                 print(f"[Info] '{fullname}' was not covered...")
