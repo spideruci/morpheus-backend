@@ -228,8 +228,8 @@ class TestMethodTableHandler(TableHandler):
         # sys.maxsize + 1 is added so all numbers are positive numbers.
         test_id = hash((
             project_id,
-            test_method.method_name,
-            test_method.class_name)) % ((sys.maxsize + 1))
+            test_method.class_name,
+            test_method.method_name)) % (sys.maxsize + 1)
         try:
             self.insert('''INSERT INTO TestMethods( test_id, project_id, method_name, class_name ) VALUES (?, ?, ?, ?) ''',
                         (test_id, project_id, test_method.method_name, test_method.class_name))
@@ -279,10 +279,12 @@ class MethodCoverageTableHandler(TableHandler):
         self.create(CREATE_TABLE)
     
     def add_coverage(self, method_id, test_id, commit_id):
+        if (method_id == 4315992337320190670 and test_id == 953843503673315383):
+            print(method_id, test_id, commit_id)
         try:
             self.insert('''INSERT INTO MethodCoverage ( method_id, test_id, commit_id ) VALUES (?, ?, ?) ''', (method_id, test_id, commit_id))
-        except:
-            print("[ERROR] something went wrong when inserting the coverage data.")
+        except Exception as e:
+            print(e)
 
     def add_batch_coverage(self, values: List[Tuple]):
         try:
@@ -305,17 +307,20 @@ class MethodCoverageHandler():
         self.cov_method_table = MethodCoverageTableHandler(database_location)
 
     def add_project_coverage(self, project_id: int, commit_id: int, prod_methods: List[ProdMethod], test_methods: List[TestMethod]):
-        test_id_map : Dict = {}
+        test_id_map : Dict[int, int] = dict()
 
         for test_method in test_methods:
             # TODO add batch insert here
-            global_test_id = self.test_method_table.add_test_method(
+            global_test_id: int = self.test_method_table.add_test_method(
                 project_id,
                 commit_id,
                 test_method
             )
-            
+
             test_id_map[test_method.test_id] = global_test_id
+
+        # Assert that each test gets (within the commit) a unique global ID
+        assert len(set(test_id_map.values())) == len(test_id_map.values())
 
         for method in prod_methods:
             # TODO add batch insert here (do not commit or close connection till done)
