@@ -6,6 +6,7 @@ import json
 from spidertools.storage.table_handlers import ProjectTableHandler, CommitTableHandler, MethodCoverageHandler
 from spidertools.data.processor import ProcessDataBuilder
 from spidertools.data.selectors import filter_selector, sort_selector
+from spidertools.utils.timer import timer
 from typing import List
 
 def create_app(data_base_path):
@@ -15,11 +16,15 @@ def create_app(data_base_path):
 
     DATABASE_PATH = data_base_path
 
+    
     @app.route('/', methods=['GET'])
+    @timer
     def hello_world():
         return "Hello World!", 200   
 
+    
     @app.route('/projects/', methods=['GET'])
+    @timer
     def list_projects():
         project_handler = ProjectTableHandler(DATABASE_PATH)
         if (results := project_handler.get_projects()) is None:
@@ -27,7 +32,9 @@ def create_app(data_base_path):
 
         return {"projects": project_handler.get_projects()}, 200
 
+    
     @app.route('/commits/<project_name>', methods=['GET'])
+    @timer
     def list_commits_of_project(project_name):
         project_handler = ProjectTableHandler(DATABASE_PATH)
         
@@ -43,7 +50,9 @@ def create_app(data_base_path):
             "commits": commits
         }, 200
 
+    
     @app.route('/coverage/<project_name>/<commit_sha>', methods=['GET'])
+    @timer
     def coverage(project_name, commit_sha):
         project_handler = ProjectTableHandler(DATABASE_PATH)
         commit_handler = CommitTableHandler(DATABASE_PATH)
@@ -62,16 +71,15 @@ def create_app(data_base_path):
         sort_function = list()
         filter_functions = list()
 
-        filter_functions.append(filter_selector("num_tests"))
-        filter_functions.append(filter_selector("test_coverage"))
-        filter_functions.append(filter_selector("test_result"))
+        # filter_functions.append(filter_selector("num_tests"))
+        # filter_functions.append(filter_selector("test_coverage"))
+        # filter_functions.append(filter_selector("test_result"))
 
         if (f := sort_selector("name")) is not None:
             sort_function.append(f)
 
         # filter and sort the data
         coverage = ProcessDataBuilder() \
-            .add_filters(filter_functions) \
             .add_sorters(sort_function) \
             .process_data(coverage)
 
