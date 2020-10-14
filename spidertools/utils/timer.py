@@ -5,6 +5,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 def timer(f):
+    if not timer.enabled:
+        return f
+
     @wraps(f)
     def __timer(*args, **kwargs):
         start = datetime.now()
@@ -12,9 +15,9 @@ def timer(f):
         end = datetime.now()
         
         diff = end - start
-        logger.warning(f'Execution time of {f.__name__}: {diff}')
+        logger.debug(f'Execution time of {f.__name__}: {diff}')
         return result
     
     return __timer
 
-timer.enable=False
+timer.enabled=False

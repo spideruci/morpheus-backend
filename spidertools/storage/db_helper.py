@@ -9,7 +9,6 @@ from typing import List, Tuple
 
 class DatabaseHelper():
     def __init__(self, db_path, echo=False):
-        print(db_path)
         self.engine = create_engine(f'sqlite:///{db_path}', echo=echo)
 
         # Create Tables if not exist
@@ -22,12 +21,11 @@ class DatabaseHelper():
 
         # Test code / Coverage
         TestMethod.__table__.create(bind=self.engine, checkfirst=True)
-        # TestResult.__table__.create(bind=self.engine, checkfirst=True)
         LineCoverage.__table__.create(bind=self.engine, checkfirst=True)
 
     def query(self, obj: Base):
         # TODO Create a cleaner wrapper around query...
-        session = Session(self.engine,  expire_on_commit=False)
+        session = Session(self.engine, expire_on_commit=False)
         return session.query(obj)
     
     def create_session(self) -> 'DatabaseSession':
@@ -55,7 +53,6 @@ class DatabaseSession():
             self.session.flush()
             self.session.commit()
         except IntegrityError as e:
-            # print(e)
             self.session.rollback()
             result = False
             object = self.session.query(type(object))\

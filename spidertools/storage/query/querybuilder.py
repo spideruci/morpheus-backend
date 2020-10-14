@@ -23,15 +23,17 @@ class CommitQuery():
         self._query = session.query(Commit)
 
     @timer
-    def get_commits(self, project_name) -> List[Commit]:
+    def get_commits(self, project: Project) -> List[Commit]:
         return self._query\
-            .filter(Project.project_name==project_name)\
+            .filter(Commit.project_id==project.id)\
             .all()
 
     @timer
-    def get_commit(self, commit_sha) -> Commit:
-        return self._query.filter(Commit.sha==commit_sha).first()
-
+    def get_commit(self, project: Project, commit_sha: str) -> Commit:
+        return self._query\
+            .filter(Commit.project_id==project.id)\
+            .filter(Commit.sha==commit_sha)\
+            .first()
 
 class MethodCoverageQuery():
     def __init__(self, session):
@@ -46,23 +48,36 @@ class MethodCoverageQuery():
         return self
 
     @timer
-    def get_methods(self) -> List[ProdMethod]:
+    def get_method(self, method_name) -> List[ProdMethod]:
         return self._session.query(ProdMethod)\
-            .join(ProdMethodVersion, (ProdMethodVersion.method_id==ProdMethod.id) & (ProdMethodVersion.commit==self.commit))\
             .filter(ProdMethod.project==self.project)\
+            .filter(ProdMethod.method_name==method_name)\
+            .first()
+
+    @timer
+    def get_methods(self) -> ProdMethod:
+        return self._session.query(ProdMethod)\
+            .join(ProdMethodVersion, (ProdMethodVersion.method_id==ProdMethod.id) & (ProdMethodVersion.commit_id==self.commit.id))\
+            .filter(ProdMethod.project_id==self.project.id)\
             .all()
 
     @timer
-    def get_tests(self):
+    def get_tests(self, method=None):
         return self._session.query(TestMethod)\
-            .join(LineCoverage, (LineCoverage.test_id==TestMethod.id) & (LineCoverage.commit==self.commit))\
+            .join(LineCoverage, (LineCoverage.test_id==TestMethod.id) & (LineCoverage.commit_id==self.commit.id))\
             .filter(TestMethod.project==self.project)\
             .all()
 
+        # return query.all()
+
     @timer
     def get_coverage(self):
-        return self._session.get_session()\
+        query = self._session.get_session()\
             .query(LineCoverage.test_id, LineCoverage.method_version_id, LineCoverage.test_result)\
-            .filter(LineCoverage.commit==self.commit)\
+        
+        if self.commit is not None:
+            query = query.filter(LineCoverage.commit==self.commit)
+
+        return query\
             .group_by(LineCoverage.test_id, LineCoverage.method_version_id)\
             .all()

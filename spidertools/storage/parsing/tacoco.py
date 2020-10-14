@@ -94,7 +94,7 @@ class TacocoParser():
         elif (result := re.search(r'[a-zA-Z_0-9]+\(([a-zA-Z_0-9.$]+)\)', test_method)) is not None:
             class_name = result.group(1)
         else:
-            print("[ERROR] class_name error: {}".format(test_method))
+            logging.error("class_name error: %s", test_method)
             raise Exception("[ERROR] class_name error: {}".format(test_method))
 
         # Parsing the method name aka test name.
@@ -109,7 +109,7 @@ class TacocoParser():
         elif (result := re.search(r'([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]+\)', test_method)) is not None:
             method_name = result.group(1)
         else:
-            print("[ERROR] method_name error: {}".format(test_method))
+            logging.error("method_name error: %s", test_method)
             raise Exception("[ERROR] method_name error: {}".format(test_method))
 
         # Parse if test passed or failed

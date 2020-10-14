@@ -2,15 +2,12 @@
 Script for running tacoco on a project
 """
 #!/bin/python3
-import argparse
-import subprocess
 import os
-
-from pathlib import Path
-from subprocess import Popen, PIPE, call, check_output
-
+import logging
+from subprocess import Popen
 from spidertools.utils.analysis_repo import AnalysisRepo
 
+logger = logging.getLogger(__name__)
 
 class TacocoRunner():
 
@@ -22,7 +19,7 @@ class TacocoRunner():
         self.file_output_dir = output_dir + os.path.sep + self.project_name
 
     def build(self):
-        print(f"[TACOCO] start builder... {self.project_path}")
+        logger.info("[TACOCO] start builder on: %s", self.project_path)
 
         # If tacoco was already run before it places a classpath in the root directory
         # which causes problems for a rerun for some checks (apache-rat-plugin).
@@ -30,7 +27,8 @@ class TacocoRunner():
         p.wait()
 
         cmd = [f"mvn compile test-compile -Dmaven.compiler.source=11 -Dmaven.compiler.target=11 -Danimal.sniffer.skip=True"]
-        print("[DEBUG] : compile command: ")
+        logger.debug("[TACOCO] compile command: %s", cmd)
+
         p = Popen(cmd, cwd=self.project_path, shell=True)
         return p.wait()
 
@@ -40,7 +38,7 @@ class TacocoRunner():
         self.__run_tacoco_reader()
 
     def __run_tacoco_coverage(self):
-        print(f"[TACOCO] start coverage... {self.project_path}")
+        logging.info("[TACOCO] start coverage...", self.project_path)
 
         run_tacoco_coverage_cmd = f"""
         mvn exec:java \
@@ -56,7 +54,7 @@ class TacocoRunner():
         return p.wait()
 
     def __run_tacoco_analysis(self):
-        print(f"[TACOCO] start analysis... {self.project_path}")
+        logging.info("[TACOCO] start analysis for: %s", self.project_path)
 
         run_tacoco_analysis_cmd = f"""
         mvn exec:java \
@@ -70,7 +68,7 @@ class TacocoRunner():
         return p.wait()
 
     def __run_tacoco_reader(self):
-        print(f"[TACOCO] start reader... {self.project_path}")
+        logging.info("[TACOCO] start reader for: %s", self.project_path)
 
         run_tacoco_reader_cmd = f"""
         mvn exec:java \

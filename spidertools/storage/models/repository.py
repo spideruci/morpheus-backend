@@ -14,6 +14,9 @@ class Project(Base):
     methods = relationship("ProdMethod", backref='project')
     tests = relationship("TestMethod", backref='project')
 
+    def __repr__(self):
+        return f"<Project(id='{self.id}', project_name={self.project_name})>"
+
 class Commit(Base):
     __tablename__ = 'commits'
 

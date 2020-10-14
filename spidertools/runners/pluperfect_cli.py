@@ -3,6 +3,7 @@ import os
 from sqlalchemy.sql.sqltypes import Boolean
 import yaml
 import json
+import logging
 from typing import Tuple
 from spidertools.utils.analysis_repo import AnalysisRepo
 from spidertools.tools.tacoco import TacocoRunner
@@ -11,6 +12,8 @@ from spidertools.storage.db_helper import DatabaseHelper
 from spidertools.storage.parsing.methods import MethodParser
 from spidertools.storage.parsing.tacoco import TacocoParser
 from spidertools.storage.models.repository import Commit, Project
+
+logger = logging.getLogger(__name__)
 
 # By default the database is only created in memory
 DB_PATH = ":memory:"
@@ -36,13 +39,11 @@ def start(project_url, output_path, tacoco_path, history_slider_path, single_run
 
     with AnalysisRepo(project_url) as repo:
         # TODO Add in error handling for existing commits/projects
-        print(f"[INFO] Project: {repo.get_project_name()}")
+        logger.info("Project: %s", repo.get_project_name())
 
         # Add project
         project = Project(project_name=repo.get_project_name())
-        # with db_handler.create_session() as session:
-        #     project, new_project = session.add(project)
-        
+
         # Analysis tools
         tacoco_runner = TacocoRunner(repo, output_path, tacoco_path)
         parser_runner = MethodParserRunner(repo, output_path, history_slider_path)
@@ -55,7 +56,7 @@ def start(project_url, output_path, tacoco_path, history_slider_path, single_run
             commits = repo.iterate_tagged_commits(5)
         
         for commit in commits:
-            print(f"[INFO] Analyze commit: {commit}")
+            logger.info("[INFO] Analyze commit: %s", commit)
             # Add commit to the database
             commit = Commit(sha=commit)
 
@@ -63,7 +64,7 @@ def start(project_url, output_path, tacoco_path, history_slider_path, single_run
             success, method_file_path, tacoco_file_path = _analysis(repo, tacoco_runner, parser_runner, output_path)
             
             if not success:
-                print(f'[Error] Analysis for {commit} failed...')
+                logger.error('Analysis for %s failed...', commit)
 
             with open(method_file_path) as method_file:
                 method_parser = MethodParser()\
@@ -97,28 +98,30 @@ def _analysis(repo, tacoco_runner, parser_runner, output_path) -> Tuple[Boolean,
     # Start analysis
     build_output = tacoco_runner.build()
 
-    if build_output != 1:
-        parser_runner.run()
-        tacoco_runner.run()
+    if build_output == 1:
+        logger.error("build failure...")
+        return (False, None, None)
 
-        # Combine data
-        commit_sha = repo.get_current_commit()
-        project_output_path = f"{output_path}{os.path.sep}{repo.get_project_name()}{os.path.sep}"
 
-        print("[Info] build successfull...")
-        return (True,
-            f"{project_output_path}methods-{commit_sha}.json",
-            f"{project_output_path}{commit_sha}-cov-matrix.json"
-        )
+    parser_runner.run()
+    tacoco_runner.run()
 
-    print("[ERROR] build failure...")
-    return (False, None, None)
+    # Combine data
+    commit_sha = repo.get_current_commit()
+    project_output_path = f"{output_path}{os.path.sep}{repo.get_project_name()}{os.path.sep}"
+
+    logger.info("build successfull...")
+    return (True,
+        f"{project_output_path}methods-{commit_sha}.json",
+        f"{project_output_path}{commit_sha}-cov-matrix.json"
+    )
+
 
 def main():
     """
     pluperfect - Run per test case coverage and method parsing on a project for a set of commits.
     """
-    print("Start analysis...")
+    logging.info("Start analysis...")
     global DB_PATH
 
     arguments = parse_arguments()
@@ -137,7 +140,7 @@ def main():
         tacoco_path = analysis_config["TACOCO_HOME"]
         history_slider_path = analysis_config["HISTORY_SLICER_HOME"]
     else:
-        print("Provide config path...")
+        logging.info("Provide config path...")
         exit(1)
 
     start(project_url, output_path, tacoco_path, history_slider_path, single_run=arguments.current)

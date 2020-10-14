@@ -9,6 +9,9 @@ from spidertools.storage.data.selectors import sort_selector
 from spidertools.storage.data.processor import ProcessDataBuilder
 from spidertools.utils.timer import timer
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 def create_app(data_base_path, echo=False):
     app = Flask(__name__)
@@ -38,7 +41,12 @@ def create_app(data_base_path, echo=False):
     def list_commits_of_project(project_name):
         
         with db_helper.create_session() as session:
-            commits = CommitQuery(session).get_commits(project_name)
+            project: Project = ProjectQuery(session).get_project(project_name)
+
+            if project is None:
+                return {"Error": "Project not found..."}, 404
+
+            commits = CommitQuery(session).get_commits(project)
 
         if len(commits) == 0:
             return {"Error": f"Project '{project_name}' was not found..."}, 404
@@ -58,9 +66,15 @@ def create_app(data_base_path, echo=False):
         # TODO Add test/method filter parameter
         with db_helper.create_session() as session:
             
-            commit: Commit = CommitQuery(session).get_commit(commit_sha=commit_sha)
-
             project: Project = ProjectQuery(session).get_project(project_name=project_name)
+            if project is None:
+                return {"Error": "Project not found..."}, 404
+
+            commit: Commit = CommitQuery(session).get_commit(project, commit_sha)
+            logger.debug(f"\n\n{project}/{commit}\n\n")
+
+            if commit is None:
+                return {"Error": "Commit not found..."}, 404
 
             coverage_query = MethodCoverageQuery(session)\
                 .set_commit(commit)\
@@ -104,8 +118,15 @@ def load_configuration(configuration_file_path):
     PORT = config['server']['port']
     DATABASE_PATH = config['server']['database_path']
 
-    print(f"Load database: {DATABASE_PATH}")
+    logging.info("Load database: %s", DATABASE_PATH)
     return HOST, PORT, DATABASE_PATH
+
+def init_logger(logging_level=logging.INFO):
+    logging.basicConfig(
+        level=logging_level,
+        format='[%(levelname)s] %(asctime)s: %(message)s',
+        datefmt='%H:%M:%S'
+    )
 
 def main():
     # Load configurations
@@ -113,9 +134,10 @@ def main():
     HOST, PORT, DATABASE_PATH = load_configuration(configuration_file)
 
     # Initialize the flask application, with debugging parameters
+    init_logger()
     app = create_app(DATABASE_PATH, echo=True)
 
     # Enable timers to get performance data on t
-    timer.enable = True
+    timer.enabled = True
     # Start the debug server
     app.run(debug=True, host=HOST, port=PORT)
