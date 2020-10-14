@@ -20,7 +20,6 @@ class ProcessDataBuilder():
             result: Dict = f(result)
 
         for sort in self._sorters:
-            print(sort)
             assert result is not None
             result: Dict = sort(result)
         

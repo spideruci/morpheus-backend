@@ -12,8 +12,9 @@ def timer(f):
         end = datetime.now()
         
         diff = end - start
-        print(f'Execution time of {f.__name__}: {diff}')
-        logger.info(f'Execution time of {f.__name__}: {diff}')
+        logger.warning(f'Execution time of {f.__name__}: {diff}')
         return result
     
     return __timer
+
+timer.enable=False
