@@ -138,16 +138,20 @@ class TacocoParser():
 
                 for line in lines:
                     method_version: ProdMethodVersion = session.query(ProdMethodVersion)\
-                        .join(ProdMethod, ProdMethod.id==ProdMethodVersion.method_id)\
+                        .join(ProdMethod, 
+                            (ProdMethod.id==ProdMethodVersion.method_id)
+                            & (ProdMethodVersion.line_start <= line.line_number)
+                            & (ProdMethodVersion.line_end >= line.line_number)
+                        )\
                         .filter(ProdMethod.file_path.contains(line.full_name))\
                         .first()
                     
                     line.test_id = test.id
                     line.commit_id = commit.id
 
-                    if method_version is not None:
-                        line.method_version_id = method_version.id
-                    else:
-                        logger.error("Method version is not set for: %s", line)
+                    if method_version is None:
+                        logger.error("No Method Version found, so line is ignored: %s", line)
+                        continue
 
+                    line.method_version_id = method_version.id
                     session.add(line)

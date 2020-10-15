@@ -59,7 +59,7 @@ class TestQueryCoverageData(unittest.TestCase):
             query = MethodCoverageQuery(session)\
                 .set_commit(commit)\
                 .set_project(project)
-            
+
             methods = query.get_methods()
             tests = query.get_tests()
             edges = query.get_coverage()
@@ -67,6 +67,30 @@ class TestQueryCoverageData(unittest.TestCase):
         assert len(methods) == 1
         assert len(tests) == 6
         assert len(edges) == 6
+
+    def test_querying_coverage_primitive_hamcrest(self):
+        # Given: an initialized database
+        project_name = 'primitive-hamcrest'
+        commit_sha = '250f63fe6e70ca6c44ee696c1937b5ccb14f2e6e'
+
+        project = Project(project_name=project_name)
+        commit = Commit(sha=commit_sha)
+
+        self.__init_database(project, commit)
+
+        # When: we query a specific method
+        with self.db_helper.create_session() as session:
+            query = MethodCoverageQuery(session)\
+                .set_commit(commit)\
+                .set_project(project)
+            
+            methods = query.get_methods()
+            tests = query.get_tests()
+            edges = query.get_coverage()
+
+        assert len(methods) == 55
+        assert len(tests) == 90
+        assert len(edges) == 400
 
     @pytest.mark.skip(reason="Long running test, should be setup as an integration test...")
     def test_querying_coverage_commons_io(self):

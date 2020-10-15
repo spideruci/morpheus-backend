@@ -36,22 +36,3 @@ class TestCoverageParser(unittest.TestCase):
             .parse(coverage)
 
         assert len(output) == 6
-
-    def test_parsing_and_storing_coverage_data(self):
-        # Given: some coverage information
-        project_name = 'mid_example'
-        commit_sha = 'df1bc2481a05acc3944cc1c3f637856d54cd8ba8'
-
-        project = Project(project_name=project_name)
-        commit = Commit(sha=commit_sha)
-        coverage: Dict = self.load_coverage(project_name, commit_sha)
-
-        # When parsing the coverage file
-        parser : TacocoParser = TacocoParser()
-
-        coverage = parser\
-            .parse(coverage)
-
-        parser.store(self.db_helper, project, commit, coverage)
-
-        assert len(self.db_helper.query(LineCoverage).all()) != 0
