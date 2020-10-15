@@ -70,7 +70,8 @@ class MethodCoverageQuery():
     @timer
     def get_coverage(self):
         return self._session.get_session()\
-            .query(LineCoverage.test_id, LineCoverage.method_version_id, LineCoverage.test_result)\
+            .query(LineCoverage, ProdMethodVersion)\
+            .join(ProdMethodVersion, (ProdMethodVersion.id==LineCoverage.method_version_id))\
             .filter(LineCoverage.commit_id==self.commit.id)\
             .group_by(LineCoverage.test_id, LineCoverage.method_version_id)\
             .all()

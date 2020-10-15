@@ -1,14 +1,14 @@
 from typing import Tuple, List, Dict, Set
 import logging
 from sqlalchemy.sql.sqltypes import Boolean
-from spidertools.storage.models.methods import TestMethod, ProdMethod, ProdMethodVersion
+from spidertools.storage.models.methods import TestMethod, ProdMethod, ProdMethodVersion, LineCoverage
 from spidertools.storage.db_helper import row2dict
 from spidertools.utils.timer import timer
 
 logger = logging.getLogger(__name__)
 
 @timer
-def coverage_format(methods: List[Tuple[ProdMethod, ProdMethodVersion]], tests: List[TestMethod], edges: List[Tuple[int, int, Boolean]]) -> Dict:
+def coverage_format(methods: List[Tuple[ProdMethod, ProdMethodVersion]], tests: List[TestMethod], edges: List[Tuple[LineCoverage, ProdMethodVersion]]) -> Dict:
     # Format to be send to the users.
     logger.debug("methods: %s, tests: %s, edges: %s", len(methods), len(tests), len(edges))
     return {
@@ -24,23 +24,29 @@ def _test_format(test: TestMethod):
         "test_id": test.id
     }
 
-def _merge_methods(method: Tuple[ProdMethod, ProdMethodVersion]):
+def _merge_methods(method: Tuple[ProdMethod, ProdMethodVersion]) -> Dict:
     m: ProdMethod
     v: ProdMethodVersion
 
     m, v = method
 
     return {
-        "method_id": v.id,
+        "method_id": m.id,
+        "method_version_id": v.id,
         "method_name": m.method_name,
         "method_decl": m.method_decl,
         "class_name": m.class_name,
         "package_name": m.package_name
     }
 
-def _edge_formatter(edge):
+def _edge_formatter(edge: Tuple[LineCoverage, ProdMethodVersion]) -> Dict:
+    line: LineCoverage
+    version: ProdMethodVersion
+
+    line, version = edge
     return {
-        "test_id": edge[0],
-        "method_id": edge[1],
-        "color": edge[2]
+        "test_id": line.test_id,
+        "method_id": version.method_id,
+        "method_version_id": version.id,
+        "test_result": line.test_result
     }
