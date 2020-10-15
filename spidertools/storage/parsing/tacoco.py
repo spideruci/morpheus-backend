@@ -150,7 +150,7 @@ class TacocoParser():
                     line.commit_id = commit.id
 
                     if method_version is None:
-                        logger.error("No Method Version found, so line is ignored: %s", line)
+                        logger.warning("No Method Version found, so line is ignored: %s", line)
                         continue
 
                     line.method_version_id = method_version.id
