@@ -5,6 +5,7 @@ from spidertools.storage.db_helper import DatabaseHelper, row2dict
 from spidertools.storage.query.querybuilder import MethodCoverageQuery, ProjectQuery, CommitQuery
 from spidertools.storage.query.output_formatter import coverage_format
 from spidertools.storage.models.repository import Commit, Project
+from spidertools.storage.models.methods import ProdMethod
 from spidertools.storage.data.selectors import sort_selector
 from spidertools.storage.data.processor import ProcessDataBuilder
 from spidertools.utils.timer import timer
@@ -91,24 +92,22 @@ def create_app(data_base_path, echo=False):
         coverage = coverage_format(methods, tests, edges)
 
         # Filter and sort data using the given parametrs.
-        # sort_function = list()
-        # filter_functions = list()
+        sort_function = list()
+        filter_functions = list()
 
-        # if (f := sort_selector("name")) is not None:
-        #     sort_function.append(f)
+        if (f := sort_selector("name")) is not None:
+            sort_function.append(f)
 
-        # # filter and sort the data
-        # coverage = ProcessDataBuilder() \
-        #     .add_sorters(sort_function) \
-        #     .process_data(coverage)
+        # filter and sort the data
+        coverage = ProcessDataBuilder() \
+            .add_sorters(sort_function) \
+            .process_data(coverage)
 
         return {
             "project": project_name,
             "commit_sha": commit_sha,
             "coverage": coverage
         }, 200
-
-    return app
 
     @app.route('/history/<project_name>/<method_name>', methods=['GET'])
     @timer
@@ -118,12 +117,16 @@ def create_app(data_base_path, echo=False):
             project: Project = ProjectQuery(session).get_project(project_name)
             
             # Get versions of method
-            # method: ProdMethod = MethodCoverageQuery(session).get_method(method_name)
+            method: ProdMethod = MethodCoverageQuery(session)\
+                .set_project(project)\
+                .get_method(method_name)
             
             # Obtain all tests that cover each version of the method and see if passed or failed
-            # MethodCoverageQuery(session).get_tests(method)
+            tests = MethodCoverageQuery(session).get_tests(method)
 
-        return 501
+        return {"Error": "Not implemented yet..."}, 501
+
+    return app
 
 def load_configuration(configuration_file_path):
     with open (configuration_file_path) as config_file:
