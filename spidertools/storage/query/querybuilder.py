@@ -1,7 +1,6 @@
 from spidertools.storage.models.repository import Commit, Project
 from spidertools.storage.models.methods import TestMethod, ProdMethod, ProdMethodVersion, LineCoverage
-from sqlalchemy import func
-from typing import List
+from typing import List, Tuple
 from spidertools.utils.timer import timer
 
 
@@ -55,8 +54,8 @@ class MethodCoverageQuery():
             .first()
 
     @timer
-    def get_methods(self) -> ProdMethod:
-        return self._session.query(ProdMethod)\
+    def get_methods(self) -> Tuple[ProdMethod, ProdMethodVersion]:
+        return self._session.get_session().query(ProdMethod, ProdMethodVersion)\
             .join(ProdMethodVersion, (ProdMethodVersion.method_id==ProdMethod.id) & (ProdMethodVersion.commit_id==self.commit.id))\
             .filter(ProdMethod.project_id==self.project.id)\
             .all()
@@ -65,19 +64,13 @@ class MethodCoverageQuery():
     def get_tests(self, method=None):
         return self._session.query(TestMethod)\
             .join(LineCoverage, (LineCoverage.test_id==TestMethod.id) & (LineCoverage.commit_id==self.commit.id))\
-            .filter(TestMethod.project==self.project)\
+            .filter(TestMethod.project_id==self.project.id)\
             .all()
-
-        # return query.all()
 
     @timer
     def get_coverage(self):
-        query = self._session.get_session()\
+        return self._session.get_session()\
             .query(LineCoverage.test_id, LineCoverage.method_version_id, LineCoverage.test_result)\
-        
-        if self.commit is not None:
-            query = query.filter(LineCoverage.commit==self.commit)
-
-        return query\
+            .filter(LineCoverage.commit_id==self.commit.id)\
             .group_by(LineCoverage.test_id, LineCoverage.method_version_id)\
             .all()

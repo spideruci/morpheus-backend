@@ -20,6 +20,7 @@ class TacocoParser():
                 try:
                     test, result = self.__parse_test_method(test_string)
                 except:
+                    logger.error("Failed parsing: %s %s", idx, test_string)
                     continue        
                 test_map[idx] = (test, result)
         
@@ -27,35 +28,36 @@ class TacocoParser():
         coverage: Dict[int, List[LineCoverage]] = dict()
         if 'sources' in tacoco_dict:
             for source in tacoco_dict['sources']:
-                # Parse filename to class and package
-                # class_name, package_name = self._split_file_name(source["source"]["fullName"])
-                
                 start_line: int = source["source"]["firstLine"]
-                end_line: int = source["source"]["lastLine"]
                 
                 # create a map from test to covered lines.
-                for test_id in source['activatingTests']:
-                    testStmtMatrix = source['testStmtMatrix']
-                    if test_id in test_map and test_id < len(testStmtMatrix):
-                        matrix = testStmtMatrix[test_id]
+                testStmtMatrix = source['testStmtMatrix']
+                for test_id, matrix in zip(source['activatingTests'], testStmtMatrix):
 
-                        for i, covered in enumerate(matrix):
-                            line_num = i + start_line
+                    # Check if test_id is in the map, if not skip it
+                    if test_id not in test_map:
+                        continue
+                    
+                    # Create a representation for each line covered by the test
+                    for i, covered in enumerate(matrix):
+                        line_num = i + start_line
 
-                            if not covered:
-                                continue
+                        #  Skip if not covered
+                        if not covered:
+                            continue
 
-                            line = LineCoverage(
-                                full_name=source["source"]["fullName"],
-                                line_number=line_num,
-                            )
-                            
-                            if test_id in coverage:
-                                lines = coverage[test_id]
-                                lines.append(line)
-                                coverage[test_id] = lines
-                            else:
-                                coverage[test_id] = [line]
+                        line = LineCoverage(
+                            full_name=source["source"]["fullName"],
+                            line_number=line_num,
+                        )
+                        
+                        # If test case already in coverage add the line so we know it covers muliple lines.
+                        if test_id in coverage:
+                            lines = coverage[test_id]
+                            lines.append(line)
+                            coverage[test_id] = lines
+                        else:
+                            coverage[test_id] = [line]
 
         # Merge to dictionaries and return a list of tuples
         def _merge(idx) -> Tuple[TestMethod, Boolean, List[LineCoverage]]:
@@ -145,5 +147,7 @@ class TacocoParser():
 
                     if method_version is not None:
                         line.method_version_id = method_version.id
+                    else:
+                        logger.error("Method version is not set for: %s", line)
 
                     session.add(line)

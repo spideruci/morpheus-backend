@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import json
 import os
 from typing import List, Dict
@@ -11,31 +12,27 @@ from spidertools.storage.query.querybuilder import MethodCoverageQuery
 class TestQueryCoverageData(unittest.TestCase):
 
     def setUp(self):
-        self.project_name = 'mid_example'
-        self.commit_sha = 'df1bc2481a05acc3944cc1c3f637856d54cd8ba8'
-        self.project = Project(project_name=self.project_name)
-        self.commit = Commit(sha=self.commit_sha)
-        self.resource_dir = f'.{os.path.sep}tests{os.path.sep}resources{os.path.sep}'
         self.db_helper = DatabaseHelper(':memory:')
+        self.resource_dir = f'.{os.path.sep}tests{os.path.sep}resources{os.path.sep}'
 
     def tearDown(self):
         pass
 
-    def __init_database(self):
+    def __init_database(self, project, commit):
         method_parser : MethodParser = MethodParser()
-        methods_dict: List[Dict] = self.__load_methods(self.project_name, self.commit_sha)
+        methods_dict: List[Dict] = self.__load_methods(project.project_name, commit.sha)
         methods = method_parser\
-            .set_commit(self.commit)\
+            .set_commit(commit)\
             .parse(methods_dict)
         
-        method_parser.store(self.db_helper, self.project, self.commit, methods)
+        method_parser.store(self.db_helper, project, commit, methods)
         
         tacoco_parser : TacocoParser = TacocoParser()
-        coverage_dict: Dict = self.__load_coverage(self.project_name, self.commit_sha)
+        coverage_dict: Dict = self.__load_coverage(project.project_name, commit.sha)
         coverage = tacoco_parser\
             .parse(coverage_dict)
 
-        tacoco_parser.store(self.db_helper, self.project, self.commit, coverage)
+        tacoco_parser.store(self.db_helper, project, commit, coverage)
 
     def __load_coverage(self, project_name, commit_sha) -> List[Dict]:
         coverage_matrix_file = f'{self.resource_dir}{project_name}{os.path.sep}{commit_sha}-cov-matrix.json'
@@ -47,30 +44,21 @@ class TestQueryCoverageData(unittest.TestCase):
         with open(methods_file) as methods:
             return json.load(methods)
 
-    def test_querying_all_prod_methods_of_a_commit(self):
+    def test_querying_coverage_mid_example(self):
         # Given: an initialized database
-        self.__init_database()
+        project_name = 'mid_example'
+        commit_sha = 'df1bc2481a05acc3944cc1c3f637856d54cd8ba8'
 
-        # When: we query a specific method
-        with self.db_helper.create_session() as session_helper:
-            session = session_helper.get_session()
+        project = Project(project_name=project_name)
+        commit = Commit(sha=commit_sha)
 
-            rows = MethodCoverageQuery(session)\
-                .set_commit(self.commit)\
-                .set_project(self.project)\
-                .all()
-
-        assert len(rows) == 6
-
-    def test_querying_all_prod_methods_of_a_commit(self):
-        # Given: an initialized database
-        self.__init_database()
+        self.__init_database(project, commit)
 
         # When: we query a specific method
         with self.db_helper.create_session() as session:
             query = MethodCoverageQuery(session)\
-                .set_commit(self.commit)\
-                .set_project(self.project)
+                .set_commit(commit)\
+                .set_project(project)
             
             methods = query.get_methods()
             tests = query.get_tests()
@@ -79,3 +67,28 @@ class TestQueryCoverageData(unittest.TestCase):
         assert len(methods) == 1
         assert len(tests) == 6
         assert len(edges) == 6
+
+    @pytest.mark.skip(reason="Long running test, should be setup as an integration test...")
+    def test_querying_coverage_commons_io(self):
+        # Given: an initialized database
+        project_name = 'commons-io'
+        commit_sha = '6efbccc88318d15c0f5fdcfa0b87e3dc980dca22'
+
+        project = Project(project_name=project_name)
+        commit = Commit(sha=commit_sha)
+
+        self.__init_database(project, commit)
+
+        # When: we query a specific method
+        with self.db_helper.create_session() as session:
+            query = MethodCoverageQuery(session)\
+                .set_commit(commit)\
+                .set_project(project)
+            
+            methods = query.get_methods()
+            tests = query.get_tests()
+            edges = query.get_coverage()
+
+        assert len(methods) == 1243
+        assert len(tests) == 1578
+        assert len(edges) == 4875

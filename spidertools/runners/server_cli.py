@@ -91,16 +91,16 @@ def create_app(data_base_path, echo=False):
         coverage = coverage_format(methods, tests, edges)
 
         # Filter and sort data using the given parametrs.
-        sort_function = list()
-        filter_functions = list()
+        # sort_function = list()
+        # filter_functions = list()
 
-        if (f := sort_selector("name")) is not None:
-            sort_function.append(f)
+        # if (f := sort_selector("name")) is not None:
+        #     sort_function.append(f)
 
-        # filter and sort the data
-        coverage = ProcessDataBuilder() \
-            .add_sorters(sort_function) \
-            .process_data(coverage)
+        # # filter and sort the data
+        # coverage = ProcessDataBuilder() \
+        #     .add_sorters(sort_function) \
+        #     .process_data(coverage)
 
         return {
             "project": project_name,
@@ -109,6 +109,21 @@ def create_app(data_base_path, echo=False):
         }, 200
 
     return app
+
+    @app.route('/history/<project_name>/<method_name>', methods=['GET'])
+    @timer
+    def history(project_name, method_name):
+        with db_helper.create_session() as session:
+            # Get project
+            project: Project = ProjectQuery(session).get_project(project_name)
+            
+            # Get versions of method
+            # method: ProdMethod = MethodCoverageQuery(session).get_method(method_name)
+            
+            # Obtain all tests that cover each version of the method and see if passed or failed
+            # MethodCoverageQuery(session).get_tests(method)
+
+        return 501
 
 def load_configuration(configuration_file_path):
     with open (configuration_file_path) as config_file:
