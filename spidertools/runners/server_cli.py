@@ -3,14 +3,15 @@ from flask_cors import CORS
 import yaml
 from spidertools.storage.db_helper import DatabaseHelper, row2dict
 from spidertools.storage.query.querybuilder import MethodCoverageQuery, ProjectQuery, CommitQuery
-from spidertools.storage.query.output_formatter import coverage_format
+from spidertools.storage.query.output_formatter import coverage_format, history_coverage_formatter
 from spidertools.storage.models.repository import Commit, Project
-from spidertools.storage.models.methods import ProdMethod
+from spidertools.storage.models.methods import ProdMethod, ProdMethodVersion, LineCoverage, TestMethod
 from spidertools.storage.data.selectors import sort_selector
 from spidertools.storage.data.processor import ProcessDataBuilder
 from spidertools.utils.timer import timer
-from typing import List
+from typing import List, Tuple
 import logging
+from pprint import pprint
 
 logger = logging.getLogger(__name__)
 
@@ -109,22 +110,40 @@ def create_app(data_base_path, echo=False):
             "coverage": coverage
         }, 200
 
-    @app.route('/history/<project_name>/<method_name>', methods=['GET'])
+    @app.route('/history/<project_name>/<method_id>', methods=['GET'])
     @timer
-    def history(project_name, method_name):
+    def history(project_name, method_id):
         with db_helper.create_session() as session:
             # Get project
             project: Project = ProjectQuery(session).get_project(project_name)
             
+            if project is None:
+                return {}, 404
+
             # Get versions of method
             method: ProdMethod = MethodCoverageQuery(session)\
                 .set_project(project)\
-                .get_method(method_name)
-            
-            # Obtain all tests that cover each version of the method and see if passed or failed
-            tests = MethodCoverageQuery(session).get_tests(method)
+                .get_method(method_id)
 
-        return {"Error": "Not implemented yet..."}, 501
+            if method is None:
+                return {}, 404   
+
+            # Obtain the coverage for each version
+            coverage: List[Tuple[LineCoverage, ProdMethodVersion, TestMethod]] = MethodCoverageQuery(session)\
+                .get_single_method_coverage(method)
+
+        coverage = history_coverage_formatter(coverage)
+
+        return {
+            "method": {
+                "method_name": method.method_name,
+                "method_decl": method.method_decl,
+                "class_name": method.class_name,
+                "package_name": method.package_name,
+                "method_id": method.id
+            },
+            "coverage": coverage
+        }, 200
 
     return app
 

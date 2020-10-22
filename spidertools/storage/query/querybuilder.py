@@ -47,10 +47,10 @@ class MethodCoverageQuery():
         return self
 
     @timer
-    def get_method(self, method_name) -> List[ProdMethod]:
+    def get_method(self, method_id) -> List[ProdMethod]:
         return self._session.query(ProdMethod)\
             .filter(ProdMethod.project==self.project)\
-            .filter(ProdMethod.method_name==method_name)\
+            .filter(ProdMethod.id==method_id)\
             .first()
 
     @timer
@@ -65,6 +65,16 @@ class MethodCoverageQuery():
         return self._session.query(TestMethod)\
             .join(LineCoverage, (LineCoverage.test_id==TestMethod.id) & (LineCoverage.commit_id==self.commit.id))\
             .filter(TestMethod.project_id==self.project.id)\
+            .all()
+
+    @timer
+    def get_single_method_coverage(self, method) -> List[Tuple[LineCoverage, ProdMethodVersion]]:
+        return self._session.get_session()\
+            .query(LineCoverage, ProdMethodVersion, TestMethod)\
+            .join(ProdMethodVersion, (ProdMethodVersion.id==LineCoverage.method_version_id))\
+            .join(TestMethod, (LineCoverage.test_id==TestMethod.id))\
+            .filter(ProdMethodVersion.method_id==method.id)\
+            .group_by(LineCoverage.test_id, LineCoverage.method_version_id)\
             .all()
 
     @timer

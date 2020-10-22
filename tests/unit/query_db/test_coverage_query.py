@@ -64,9 +64,12 @@ class TestQueryCoverageData(unittest.TestCase):
             tests = query.get_tests()
             edges = query.get_coverage()
 
+            history_coverage = query.get_single_method_coverage(methods[0][0])
+
         assert len(methods) == 1
         assert len(tests) == 6
         assert len(edges) == 6
+        assert len(history_coverage) == 6
 
     def test_querying_coverage_primitive_hamcrest(self):
         # Given: an initialized database
