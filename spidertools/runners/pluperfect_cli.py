@@ -50,7 +50,7 @@ def start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, a
         if arguments.current:
             commits = [repo.get_current_commit()]
         elif arguments.tags is not None:
-            commits = repo.iterate_tagged_commits(5)
+            commits = repo.iterate_tagged_commits(arguments.tags)
         elif arguments.commits is not None:
             commits = repo.iterate_commits(arguments.commits)
         else:
