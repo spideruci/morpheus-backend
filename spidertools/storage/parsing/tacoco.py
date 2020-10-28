@@ -14,7 +14,7 @@ class TacocoParser():
         logger.info("Start parsing tacoco data...")
 
         # Testcases
-        test_map: Dict[int, Tuple[TestMethod, Boolean]] = {}
+        test_map: Dict[int, Tuple[TestMethod, str]] = {}
         if 'testsIndex' in tacoco_dict:
             for idx, test_string in enumerate(tacoco_dict['testsIndex']):
                 try:
@@ -87,7 +87,7 @@ class TacocoParser():
         package_name = '.'.join(path[0 : len(path) - 1])
         return class_name, package_name
 
-    def __parse_test_method(self, test_method: str) -> Tuple[TestMethod, Boolean]:
+    def __parse_test_method(self, test_method: str) -> Tuple[TestMethod, str]:
         # Parsing the class name
         if (result := re.search(r'runner:([a-zA-Z0-9._()$]+)', test_method)) is not None:
             class_name = result.group(1)
@@ -115,10 +115,14 @@ class TacocoParser():
             raise Exception("[ERROR] method_name error: {}".format(test_method))
 
         # Parse if test passed or failed
-        test_passed = re.search(r'(_F$)', test_method) is None
+        test_result = "P"
+        if (result := re.search(r'(_F$)', test_method) is not None):
+            test_result = "F"
+        elif(result := re.search(r'(_I$)', test_method) is not None):
+            test_result = "I"
 
         test = TestMethod(class_name=class_name, method_name=method_name)
-        return test, test_passed
+        return test, test_result
 
     def store(self,
             db_helper: DatabaseHelper,
@@ -150,7 +154,6 @@ class TacocoParser():
                     line.commit_id = commit.id
 
                     if method_version is None:
-                        logger.warning("No Method Version found, so line is ignored: %s", line)
                         continue
 
                     line.method_version_id = method_version.id
