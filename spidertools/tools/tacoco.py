@@ -18,18 +18,51 @@ class TacocoRunner():
         self.project_name = self.__repo.get_project_name()
         self.file_output_dir = output_dir + os.path.sep + self.project_name
 
-    def build(self):
+    def install(self):
         logger.info("[TACOCO] start builder on: %s", self.project_path)
+
+        cmd = [f"mvn install"]
+        success = self.__run_command(cmd)
+
+        if success == 1:
+            raise Exception("'mvn install' failed...")
+
+        return self
+
+    def compile(self):
+        logger.info("[TACOCO] start builder on: %s", self.project_path)
+
+        cmd = [f"mvn -T 4 compile"]
+        success = self.__run_command(cmd)
+
+        if success == 1:
+            raise Exception("'mvn compile' failed...")
+
+        return self
+
+    def test_compile(self):
+        logger.info("[TACOCO] start builder on: %s", self.project_path)
+
+        cmd = [f"mvn -T 4 test-compile"]
+        success = self.__run_command(cmd)
+
+        if success == 1:
+            raise Exception("'mvn test-compile' failed...")
+
+        return self
+
+    def __run_command(self, cmd):
+        logger.info("[TACOCO] Run command on: %s", self.project_path)
 
         # If tacoco was already run before it places a classpath in the root directory
         # which causes problems for a rerun for some checks (apache-rat-plugin).
         p = Popen(["rm", "tacoco.cp"], cwd=self.project_path)
         p.wait()
+        my_env = os.environ.copy()
 
-        cmd = [f"mvn compile test-compile -Dmaven.compiler.source=11 -Dmaven.compiler.target=11 -Danimal.sniffer.skip=True"]
-        logger.debug("[TACOCO] compile command: %s", cmd)
+        logger.debug("[TACOCO] command run: %s", cmd)
+        p = Popen(cmd, cwd=self.project_path, shell=True, env=my_env)
 
-        p = Popen(cmd, cwd=self.project_path, shell=True)
         return p.wait()
 
     def run(self):
@@ -37,8 +70,8 @@ class TacocoRunner():
         self.__run_tacoco_analysis()
         self.__run_tacoco_reader()
 
-    def __run_tacoco_coverage(self):
-        logging.info("[TACOCO] start coverage...", self.project_path)
+    def __run_tacoco_coverage(self, debug=False):
+        logging.info("[TACOCO] start coverage... %s", self.project_path)
 
         run_tacoco_coverage_cmd = f"""
         mvn exec:java \
@@ -47,8 +80,11 @@ class TacocoRunner():
             -Dtacoco.home={self.tacoco_path} \
             -Dtacoco.project={self.__repo.get_current_commit()} \
             -Dtacoco.outdir={self.file_output_dir} \
-            -Danalyzer.opts="configs/tacoco-analyzer.config"
+            -Danalyzer.opts="configs/tacoco-analyzer.config" \
         """
+
+        if debug:
+            run_tacoco_coverage_cmd += " -Dtacoco.debug"
 
         p = Popen(run_tacoco_coverage_cmd, cwd=self.tacoco_path, shell=True)
         return p.wait()

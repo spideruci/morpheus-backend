@@ -15,9 +15,6 @@ from spidertools.storage.models.repository import Commit, Project
 
 logger = logging.getLogger(__name__)
 
-# By default the database is only created in memory
-DB_PATH = ":memory:"
-
 def parse_arguments():
     """
     Parse arguments to run pluperfect
@@ -32,9 +29,7 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def start(project_url, output_path, tacoco_path, history_slider_path, single_run):
-    global DB_PATH
-
+def start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, single_run):
     db_handler = DatabaseHelper(DB_PATH)
 
     with AnalysisRepo(project_url) as repo:
@@ -95,14 +90,16 @@ def _analysis(repo, tacoco_runner, parser_runner, output_path) -> Tuple[Boolean,
     # Before each analysis remove all generated files of previous run
     repo.clean()
 
-    # Start analysis
-    build_output = tacoco_runner.build()
-
-    if build_output == 1:
+    # Try compiling the project
+    try:
+        tacoco_runner \
+            .compile() \
+            .test_compile()
+    except Exception as e:
         logger.error("build failure...")
         return (False, None, None)
 
-
+    # Start analysis
     parser_runner.run()
     tacoco_runner.run()
 
@@ -116,13 +113,21 @@ def _analysis(repo, tacoco_runner, parser_runner, output_path) -> Tuple[Boolean,
         f"{project_output_path}{commit_sha}-cov-matrix.json"
     )
 
+def init_logger(logging_level=logging.DEBUG):
+    logging.basicConfig(
+        level=logging_level,
+        format='[%(levelname)s] %(asctime)s: %(message)s',
+        datefmt='%H:%M:%S'
+    )
 
 def main():
     """
     pluperfect - Run per test case coverage and method parsing on a project for a set of commits.
     """
+    init_logger()
+
     logging.info("Start analysis...")
-    global DB_PATH
+    DB_PATH = ":memory:"
 
     arguments = parse_arguments()
     project_url = arguments.project_url
@@ -143,4 +148,4 @@ def main():
         logging.info("Provide config path...")
         exit(1)
 
-    start(project_url, output_path, tacoco_path, history_slider_path, single_run=arguments.current)
+    start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, single_run=arguments.current)
