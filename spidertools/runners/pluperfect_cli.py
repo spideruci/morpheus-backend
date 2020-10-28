@@ -1,6 +1,5 @@
 import argparse
 import os
-from sqlalchemy.sql.sqltypes import Boolean
 import yaml
 import json
 import logging
@@ -12,7 +11,7 @@ from spidertools.storage.db_helper import DatabaseHelper
 from spidertools.storage.parsing.methods import MethodParser
 from spidertools.storage.parsing.tacoco import TacocoParser
 from spidertools.storage.models.repository import Commit, Project
-
+ 
 logger = logging.getLogger(__name__)
 
 def parse_arguments():
@@ -21,15 +20,18 @@ def parse_arguments():
     """
     parser = argparse.ArgumentParser(description='Run Tacoco')
 
-    # TODO: Add option to switch between number of releases and number of commits
     parser.add_argument('project_url', type=str, help="Absolute path or url to system-under-test.")
     parser.add_argument('--output_path', type=str, help="absolute path to output directory")
-    parser.add_argument('--current', action='store_true', help="Run the analysis on current version of the code")
     parser.add_argument('--config', type=str, help="absolute path to tacoco")
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--current', action='store_true', help="Run the analysis on current version of the code")
+    group.add_argument('--tags', type=int, help="Run the analysis on specified amount of tags, -1 would be all tags")
+    group.add_argument('--commits', type=int, help="Run the analysis on specified amount of commits, -1 would be all commits")
 
     return parser.parse_args()
 
-def start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, single_run):
+def start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, arguments):
     db_handler = DatabaseHelper(DB_PATH)
 
     with AnalysisRepo(project_url) as repo:
@@ -45,10 +47,15 @@ def start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, s
 
         # Get all commits we want to run the analysis on.
         commits = []
-        if single_run:
+        if arguments.current:
             commits = [repo.get_current_commit()]
-        else:
+        elif arguments.tags is not None:
             commits = repo.iterate_tagged_commits(5)
+        elif arguments.commits is not None:
+            commits = repo.iterate_commits(arguments.commits)
+        else:
+            print("The run was misconfigured...")
+            exit(0)
         
         for commit in commits:
             logger.info("[INFO] Analyze commit: %s", commit)
@@ -60,6 +67,7 @@ def start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, s
             
             if not success:
                 logger.error('Analysis for %s failed...', commit)
+                continue
 
             with open(method_file_path) as method_file:
                 method_parser = MethodParser()\
@@ -86,7 +94,7 @@ def start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, s
                     coverage=coverage
                 )
 
-def _analysis(repo, tacoco_runner, parser_runner, output_path) -> Tuple[Boolean, str, str]:
+def _analysis(repo, tacoco_runner, parser_runner, output_path) -> Tuple[bool, str, str]:
     # Before each analysis remove all generated files of previous run
     repo.clean()
 
@@ -148,4 +156,4 @@ def main():
         logging.info("Provide config path...")
         exit(1)
 
-    start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, single_run=arguments.current)
+    start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, arguments=arguments)

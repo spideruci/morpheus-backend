@@ -73,3 +73,16 @@ class AnalysisRepo(object):
 
             if max_commits == i:
                 break
+
+    def iterate_commits(self, max_commits=-1) -> Tag:
+        """
+        yield current commit, however iterate only through master branch.
+        """
+        git: Git = self.repo.git
+
+        for i, commit in enumerate(self.repo.iter_commits('master')):
+            git.checkout(commit)
+            yield self.get_current_commit()
+
+            if max_commits == i:
+                break

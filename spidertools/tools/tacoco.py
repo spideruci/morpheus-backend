@@ -32,7 +32,7 @@ class TacocoRunner():
     def compile(self):
         logger.info("[TACOCO] start builder on: %s", self.project_path)
 
-        cmd = [f"mvn -T 4 compile"]
+        cmd = [f"mvn compile"]
         success = self.__run_command(cmd)
 
         if success == 1:
@@ -43,7 +43,7 @@ class TacocoRunner():
     def test_compile(self):
         logger.info("[TACOCO] start builder on: %s", self.project_path)
 
-        cmd = [f"mvn -T 4 test-compile"]
+        cmd = [f"mvn test-compile"]
         success = self.__run_command(cmd)
 
         if success == 1:
