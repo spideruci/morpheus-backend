@@ -1,6 +1,6 @@
 from inspect import getmembers, isfunction
-import spidertools.data.filtering as filtering
-import spidertools.data.sorting as sorting
+import spidertools.storage.data.filtering as filtering
+import spidertools.storage.data.sorting as sorting
 
 def _selector(filter_type, module):
     # Get all filter functions

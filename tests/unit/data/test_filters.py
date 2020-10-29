@@ -1,6 +1,6 @@
 import unittest
-from spidertools.data.selectors import filter_selector
-from spidertools.data.filtering import no_filter
+from spidertools.storage.data.selectors import filter_selector
+from spidertools.storage.data.filtering import no_filter
 
 class TestFilter(unittest.TestCase):
     def setUp(self):
