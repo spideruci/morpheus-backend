@@ -60,9 +60,9 @@ class TacocoParser():
                             coverage[test_id] = [line]
 
         # Merge to dictionaries and return a list of tuples
-        def _merge(idx) -> Tuple[TestMethod, Boolean, List[LineCoverage]]:
+        def _merge(idx) -> Tuple[TestMethod, str, List[LineCoverage]]:
             test : TestMethod
-            result: Boolean
+            result: str
             
             if idx in test_map and idx in coverage:
                 test, result = test_map[idx]
@@ -118,8 +118,6 @@ class TacocoParser():
         test_result = "P"
         if (result := re.search(r'(_F$)', test_method) is not None):
             test_result = "F"
-        elif(result := re.search(r'(_I$)', test_method) is not None):
-            test_result = "I"
 
         test = TestMethod(class_name=class_name, method_name=method_name)
         return test, test_result
