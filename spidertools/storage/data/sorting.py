@@ -32,6 +32,11 @@ def test_name(coverage: Dict, reverse=False) -> Dict:
     )
     return coverage
 
+def cluster(coverage: Dict, threshold=0.1):
+    coverage = cluster_methods(coverage, threshold=threshold)
+    coverage = cluster_tests(coverage, threshold=threshold)
+    return coverage
+
 def cluster_methods(coverage: Dict, threshold=0.2) -> Dict:
     methods = coverage["methods"]
     cluster_labels = __clustering(coverage, threshold, transpose=False)
@@ -44,8 +49,6 @@ def cluster_methods(coverage: Dict, threshold=0.2) -> Dict:
     return coverage
 
 def cluster_tests(coverage: Dict, threshold=0.2) -> Dict:
-    coverage = name(coverage)
-
     tests = coverage["tests"]
     cluster_labels = __clustering(coverage, threshold, transpose=True)
     

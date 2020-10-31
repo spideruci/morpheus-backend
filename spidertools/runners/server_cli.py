@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 def create_app(data_base_path, echo=False):
     app = Flask(__name__)
+    app.config['JSON_SORT_KEYS'] = False
     CORS(app)
 
     db_helper: DatabaseHelper = DatabaseHelper(data_base_path, echo)
