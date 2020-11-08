@@ -115,9 +115,9 @@ class TacocoParser():
             raise Exception("[ERROR] method_name error: {}".format(test_method))
 
         # Parse if test passed or failed
-        test_result = "P"
+        test_result = True
         if (result := re.search(r'(_F$)', test_method) is not None):
-            test_result = "F"
+            test_result = False
 
         test = TestMethod(class_name=class_name, method_name=method_name)
         return test, test_result

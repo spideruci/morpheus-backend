@@ -47,7 +47,7 @@ class LineCoverage(Base):
     commit_id = Column(Integer, ForeignKey('commits.id'))
     test_id = Column(Integer, ForeignKey('testcases.id'))
     method_version_id = Column(Integer, ForeignKey('method_versions.id'))
-    test_result = Column(String(1))
+    test_result = Column(Boolean)
     full_name = Column(String, nullable=False)
     line_number = Column(Integer, nullable=False)
     
