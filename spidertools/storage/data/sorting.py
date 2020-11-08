@@ -1,10 +1,9 @@
 from typing import List, Dict
 from sklearn.cluster import AgglomerativeClustering
-from sklearn.metrics import pairwise_distances
+from treelib import Node, Tree
 from scipy.sparse import dok_matrix
 import numpy as np
 import logging
-from pprint import pprint
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ def cluster_methods(coverage: Dict, threshold=0.2) -> Dict:
     for method, cluster_id in zip(methods, cluster_labels):
         method["cluster_id"] = cluster_id.item()
 
-    coverage['methods'] = __multi_key_sort(methods, ['cluster_id', 'package_name', 'class_name', 'method_name'])
+    # coverage['methods'] = __multi_key_sort(methods, ['cluster_id', 'package_name', 'class_name', 'method_name'])
 
     return coverage
 
@@ -55,7 +54,7 @@ def cluster_tests(coverage: Dict, threshold=0.2) -> Dict:
     for test, cluster_id in zip(tests, cluster_labels):
         test["cluster_id"] = cluster_id.item()
 
-    coverage['tests'] = __multi_key_sort(tests, ['cluster_id', 'class_name', 'method_name'])
+    # coverage['tests'] = __multi_key_sort(tests, ['cluster_id', 'class_name', 'method_name'])
 
     return coverage
 
@@ -88,11 +87,41 @@ def __clustering(coverage: Dict, threshold, transpose=False) -> Dict:
         except Exception as e:
             print(e)
 
-    return AgglomerativeClustering(
+    model = AgglomerativeClustering(
         n_clusters=None,
         affinity='euclidean',
-        distance_threshold=threshold,
-    ).fit_predict(sparse.todense())
+        distance_threshold=0,
+        linkage='ward'
+    ).fit(sparse.todense())
+
+    return __label(model)
+
+def __label(model):
+    tree = Tree()
+
+    input_length = len(model.labels_)
+    root_node = input_length + len(model.children_) - 1
+    tree.create_node(root_node, root_node)
+
+    size = model.children_.shape[0]
+
+    for idx in range(size):
+        # Determine parent node
+        parent = input_length + size - idx -1
+        children = model.children_[size - idx -1]
+
+        # Create children node
+        tree.create_node(children[0], children[0], parent=parent)
+        tree.create_node(children[1], children[1], parent=parent)
+
+    leaves = []
+    for l in tree.expand_tree(mode=1, reverse=True):
+        node = tree.get_node(l)
+        if not node.is_leaf():
+            continue
+        leaves.append(node.identifier)
+
+    return leaves
 
 def __multi_key_sort(objects: List, keys: List[str], reverse=False):
     objects = sorted(

@@ -10,7 +10,7 @@ from spidertools.storage.models.repository import Commit, Project
 from spidertools.storage.db_helper import DatabaseHelper
 from spidertools.storage.query.querybuilder import MethodCoverageQuery
 from spidertools.storage.query.output_formatter import coverage_format
-from spidertools.storage.data.sorting import cluster_tests
+from spidertools.storage.data.sorting import cluster
 
 class TestQueryCoverageData(unittest.TestCase):
 
@@ -69,7 +69,7 @@ class TestQueryCoverageData(unittest.TestCase):
 
         coverage = coverage_format(methods, tests, edges)
 
-        coverage = cluster_tests(coverage)
+        coverage = cluster(coverage)
 
         assert coverage is not None
         assert json.dumps(coverage) is not None

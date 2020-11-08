@@ -16,7 +16,8 @@ setup(
         'flask==1.1.2',
         'flask-cors==3.0.8',
         'scikit-learn==0.23.2', 
-        'sqlalchemy==1.3'
+        'sqlalchemy==1.3',
+        'treelib==1.6.1'
     ],
     tests_require = [
         'pytest'

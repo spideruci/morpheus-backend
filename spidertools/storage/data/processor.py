@@ -3,8 +3,13 @@ from typing import List, Callable, Dict
 class ProcessDataBuilder():
 
     def __init__(self):
+        self._metrics: List[Callable] = []
         self._filters: List[Callable] = []
         self._sorters: List[Callable] = []
+
+    def add_metrics(self, metric):
+        self._metrics.append(metric)
+        return self
 
     def add_filters(self, filters : List[Callable]):
         self._filters.extend(filters)
@@ -16,6 +21,10 @@ class ProcessDataBuilder():
     
     def process_data(self, data: Dict):
         result: Dict = data
+
+        for f in self._metrics:
+            result: Dict = f(result)
+
         for f in self._filters:
             result: Dict = f(result)
 

@@ -7,6 +7,7 @@ from spidertools.storage.query.output_formatter import coverage_format, history_
 from spidertools.storage.models.repository import Commit, Project
 from spidertools.storage.models.methods import ProdMethod, ProdMethodVersion, LineCoverage, TestMethod
 from spidertools.storage.data.selectors import sort_selector
+from spidertools.storage.data.sorting import cluster
 from spidertools.storage.data.processor import ProcessDataBuilder
 from spidertools.utils.timer import timer
 from typing import List, Tuple
@@ -95,7 +96,6 @@ def create_app(data_base_path, echo=False):
 
         # Filter and sort data using the given parametrs.
         sort_function = list()
-        filter_functions = list()
 
         if (f := sort_selector("name")) is not None:
             sort_function.append(f)
@@ -103,6 +103,7 @@ def create_app(data_base_path, echo=False):
         # filter and sort the data
         coverage = ProcessDataBuilder() \
             .add_sorters(sort_function) \
+            .add_metrics(cluster) \
             .process_data(coverage)
 
         return {
