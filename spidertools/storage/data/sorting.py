@@ -85,7 +85,7 @@ def __clustering(coverage: Dict, threshold, transpose=False) -> Dict:
         except Exception as e:
             test_id = edge['test_id']
             method_id = edge['method_id']
-            logger.error('Edge can not be placed in sparse matrix: %s %s', test_id, method_id)
+            logger.error('Edge can not be placed in sparse matrix: shape:(%s, %s) test_id: %s, method_id: %s ', len(methods), len(tests), test_id, method_id)
 
     if transpose:
         sparse = sparse.transpose()
