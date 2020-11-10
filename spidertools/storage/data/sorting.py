@@ -68,24 +68,27 @@ def __clustering(coverage: Dict, threshold, transpose=False) -> Dict:
         if 'test_id' in test:
             test_id_map[test['test_id']] = i
         else:
-            print(test)
+            logger.error('test_id not found in %s', test)
     
     method_id_map = dict()
     for i, method in enumerate(methods):
         if 'method_id' in method:
             method_id_map[method['method_id']] = i
         else:
-            print(method)
+            logger.error('method_id not found in %s', method)
 
     sparse = dok_matrix((len(methods), len(tests)), dtype=np.int)
-    if transpose:
-        sparse = sparse.transpose()
 
     for edge in edges:
         try:
             sparse[method_id_map[edge['method_id']], test_id_map[edge['test_id']]] = 1
         except Exception as e:
-            print(e)
+            test_id = edge['test_id']
+            method_id = edge['method_id']
+            print(f'[ERROR] edge not in map { test_id } { method_id }')
+
+    if transpose:
+        sparse = sparse.transpose()
 
     model = AgglomerativeClustering(
         n_clusters=None,
