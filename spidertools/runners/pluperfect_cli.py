@@ -73,26 +73,34 @@ def start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, a
                 method_parser = MethodParser()\
                     .set_commit(commit)
 
-                coverage = method_parser\
+                methods = method_parser\
                     .parse(json.load(method_file))
-                method_parser.store(
-                    db_helper=db_handler,
-                    project=project,
-                    commit=commit,
-                    methods=coverage
-                )
+
+                if len(methods) != 0:
+                    method_parser.store(
+                        db_helper=db_handler,
+                        project=project,
+                        commit=commit,
+                        methods=methods
+                    )
+                else:
+                    logger.error("No methods were parsed...")
+
 
             with open(tacoco_file_path) as tacoco_file:
                 tacoco_parser = TacocoParser()
                 coverage = tacoco_parser\
                     .parse(json.load(tacoco_file))
 
-                tacoco_parser.store(
-                    db_helper=db_handler,
-                    project=project,
-                    commit=commit,
-                    coverage=coverage
-                )
+                if len(coverage) != 0:
+                    tacoco_parser.store(
+                        db_helper=db_handler,
+                        project=project,
+                        commit=commit,
+                        coverage=coverage
+                    )
+                else:
+                    logger.error("No coverage was collected.")
 
 def _analysis(repo, tacoco_runner, parser_runner, output_path) -> Tuple[bool, str, str]:
     # Before each analysis remove all generated files of previous run
