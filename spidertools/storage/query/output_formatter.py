@@ -54,18 +54,20 @@ def _edge_formatter(edge: Tuple[LineCoverage, ProdMethodVersion]) -> Dict:
 @timer
 def history_coverage_formatter(coverage: List[Tuple[LineCoverage, ProdMethodVersion, TestMethod]]) -> Dict:
     # Format to be send to the users.
-    commits = []
+    all_commits = set()
+    commits = list()
     tests = []
     edges = []
 
     line: LineCoverage
     prodmethod: ProdMethodVersion
     test: TestMethod
+
     for line, prodmethod, test in coverage:
         # TODO make sure only unique commits are added
-        commits.append({
-            "commit_id": prodmethod.commit_id,
-        })
+        if prodmethod.commit_id not in all_commits:
+            commits.append( {"commit_id": prodmethod.commit_id})
+            all_commits.add(prodmethod.commit_id)
 
         # TODO make sure only unique tests are added
         tests.append({

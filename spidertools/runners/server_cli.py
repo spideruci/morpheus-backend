@@ -130,6 +130,8 @@ def create_app(data_base_path, echo=False):
             if method is None:
                 return {}, 404   
 
+            pprint(method)
+            
             # Obtain the coverage for each version
             coverage: List[Tuple[LineCoverage, ProdMethodVersion, TestMethod]] = MethodCoverageQuery(session)\
                 .get_single_method_coverage(method)
