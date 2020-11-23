@@ -2,6 +2,7 @@ from typing import Tuple, List, Dict, Set
 import logging
 from sqlalchemy.sql.sqltypes import Boolean
 from spidertools.storage.models.methods import TestMethod, ProdMethod, ProdMethodVersion, LineCoverage
+from spidertools.storage.models.repository import Commit
 from spidertools.storage.db_helper import row2dict
 from spidertools.utils.timer import timer
 
@@ -52,35 +53,28 @@ def _edge_formatter(edge: Tuple[LineCoverage, ProdMethodVersion]) -> Dict:
     }
 
 @timer
-def history_coverage_formatter(coverage: List[Tuple[LineCoverage, ProdMethodVersion, TestMethod]]) -> Dict:
+def history_coverage_formatter(method, coverage: List[Tuple[Commit, List[Tuple[TestMethod, bool]]]]) -> Dict:
     # Format to be send to the users.
-    all_commits = set()
-    commits = list()
-    tests = []
-    edges = []
+    all_tests: Set[int] = set()
 
-    line: LineCoverage
-    prodmethod: ProdMethodVersion
-    test: TestMethod
+    commits: List[Dict] = list()
+    tests: List[Dict] = []
+    edges: List[Dict] = []
 
-    for line, prodmethod, test in coverage:
-        # TODO make sure only unique commits are added
-        if prodmethod.commit_id not in all_commits:
-            commits.append( {"commit_id": prodmethod.commit_id})
-            all_commits.add(prodmethod.commit_id)
+    for commit, coverage in coverage:
+        # Only unique tests are added
+        for test, result in coverage:
+            if test.id not in all_tests:
+                tests.append(row2dict(test))
+                all_tests.add(test.id)
 
-        # TODO make sure only unique tests are added
-        tests.append({
-            "test_id": test.id,
-            "class_name": test.class_name,
-            "method_name": test.method_name
-        })
+            edges.append({
+                "test_id": test.id,
+                "commit_id": commit.id,
+                "test_result": result
+            })
 
-        edges.append({
-            "test_id": test.id,
-            "commit_id": prodmethod.commit_id,
-            "test_result": line.test_result
-        })
+        commits.append(row2dict(commit))
 
     return {
         "commits": commits,

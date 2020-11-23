@@ -146,6 +146,7 @@ class TacocoParser():
                             & (ProdMethodVersion.line_end >= line.line_number)
                         )\
                         .filter(ProdMethod.file_path.contains(line.full_name))\
+                        .filter(ProdMethodVersion.commit_id==commit.id)\
                         .first()
                     
                     line.test_id = test.id

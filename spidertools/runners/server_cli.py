@@ -12,7 +12,6 @@ from spidertools.storage.data.processor import ProcessDataBuilder
 from spidertools.utils.timer import timer
 from typing import List, Tuple
 import logging
-from pprint import pprint
 
 logger = logging.getLogger(__name__)
 
@@ -129,14 +128,12 @@ def create_app(data_base_path, echo=False):
 
             if method is None:
                 return {}, 404   
-
-            pprint(method)
             
             # Obtain the coverage for each version
-            coverage: List[Tuple[LineCoverage, ProdMethodVersion, TestMethod]] = MethodCoverageQuery(session)\
+            coverage: List[Tuple[Commit, List[Tuple[TestMethod, bool]]]] = MethodCoverageQuery(session)\
                 .get_single_method_coverage(method)
 
-        coverage = history_coverage_formatter(coverage)
+        coverage = history_coverage_formatter(method, coverage)
 
         return {
             "method": {
