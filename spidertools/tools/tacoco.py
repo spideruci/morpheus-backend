@@ -6,6 +6,7 @@ import os
 import logging
 from subprocess import Popen
 from spidertools.utils.analysis_repo import AnalysisRepo
+from spidertools.storage.models.repository import Commit
 
 logger = logging.getLogger(__name__)
 
@@ -73,12 +74,16 @@ class TacocoRunner():
     def __run_tacoco_coverage(self, debug=False):
         logging.info("[TACOCO] start coverage... %s", self.project_path)
 
+        # Obtain commit sha
+        commit: Commit = self.__repo.get_current_commit()
+
+        # Run analysis
         run_tacoco_coverage_cmd = f"""
         mvn exec:java \
             -Plauncher \
             -Dtacoco.sut={self.project_path} \
             -Dtacoco.home={self.tacoco_path} \
-            -Dtacoco.project={self.__repo.get_current_commit()} \
+            -Dtacoco.project={commit.sha} \
             -Dtacoco.outdir={self.file_output_dir} \
             -Danalyzer.opts="configs/tacoco-analyzer.config" \
         """
@@ -92,12 +97,16 @@ class TacocoRunner():
     def __run_tacoco_analysis(self):
         logging.info("[TACOCO] start analysis for: %s", self.project_path)
 
+        # Obtain commit sha
+        commit: Commit = self.__repo.get_current_commit()
+
+        # Run analysis
         run_tacoco_analysis_cmd = f"""
         mvn exec:java \
             -Panalyzer \
             -Dtacoco.sut={self.project_path} \
-            -Dtacoco.exec={self.file_output_dir}{os.path.sep}{self.__repo.get_current_commit()}.exec \
-            -Dtacoco.json={self.file_output_dir}{os.path.sep}{self.__repo.get_current_commit()}.json
+            -Dtacoco.exec={self.file_output_dir}{os.path.sep}{commit.sha}.exec \
+            -Dtacoco.json={self.file_output_dir}{os.path.sep}{commit.sha}.json
         """
 
         p = Popen(run_tacoco_analysis_cmd, cwd=self.tacoco_path, shell=True)
@@ -106,10 +115,12 @@ class TacocoRunner():
     def __run_tacoco_reader(self):
         logging.info("[TACOCO] start reader for: %s", self.project_path)
 
+        commit: Commit = self.__repo.get_current_commit()
+
         run_tacoco_reader_cmd = f"""
         mvn exec:java \
             -Preader \
-            -Dtacoco.json={self.file_output_dir}{os.path.sep}{self.__repo.get_current_commit()}.json
+            -Dtacoco.json={self.file_output_dir}{os.path.sep}{commit.sha}.json
         """
 
         p = Popen(run_tacoco_reader_cmd, cwd=self.tacoco_path, shell=True)

@@ -1,5 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.sqltypes import DateTime
 from . import Base
 
 class Project(Base):
@@ -23,6 +24,8 @@ class Commit(Base):
     id = Column(Integer, primary_key=True)
     project_id = Column(Integer, ForeignKey('projects.id'))
     sha = Column(String)
+    author = Column(String)
+    datetime = Column(DateTime)
 
     test_results = relationship("LineCoverage", backref='commit')
     prod_method_versions = relationship("ProdMethodVersion", backref='commit')
@@ -30,4 +33,4 @@ class Commit(Base):
     UniqueConstraint(project_id, sha)
 
     def __repr__(self):
-        return f"<Commit(project_id='{self.project_id}', sha={self.sha})>"
+        return f"<Commit(project_id='{self.project_id}', sha={self.sha}, author={self.author}, datetime={self.datetime})>"

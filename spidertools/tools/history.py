@@ -6,6 +6,7 @@ import os
 import logging
 from subprocess import Popen, PIPE, call, check_output
 from spidertools.utils.analysis_repo import AnalysisRepo
+from spidertools.storage.models.repository import Commit
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +40,13 @@ class MethodParserRunner():
 
     def run(self):
         logger.info("[Method Parser] start analysis... %s", self.project_path)
+        
+        # Obtain commit sha
+        commit: Commit = self.__repo.get_current_commit()
+
+        # Run analysis
         run_method_parser_cmd = f"""
-        ./gradlew method-parser:run --args="--sut {self.project_path} --outputPath {self.file_output_dir}{os.path.sep}methods-{self.__repo.get_current_commit()}.json"
+        ./gradlew method-parser:run --args="--sut {self.project_path} --outputPath {self.file_output_dir}{os.path.sep}methods-{commit.sha}.json"
         """
 
         p = Popen(run_method_parser_cmd, cwd=self.history_slicer_path, shell=True)

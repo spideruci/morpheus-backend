@@ -3,7 +3,7 @@ import os
 import yaml
 import json
 import logging
-from typing import Tuple
+from typing import Tuple, List
 from spidertools.utils.analysis_repo import AnalysisRepo
 from spidertools.tools.tacoco import TacocoRunner
 from spidertools.tools.history import MethodParserRunner
@@ -46,7 +46,7 @@ def start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, a
         parser_runner = MethodParserRunner(repo, output_path, history_slider_path)
 
         # Get all commits we want to run the analysis on.
-        commits = []
+        commits: List[Commit] = []
         if arguments.current:
             commits = [repo.get_current_commit()]
         elif arguments.tags is not None:
@@ -58,15 +58,13 @@ def start(DB_PATH, project_url, output_path, tacoco_path, history_slider_path, a
             exit(0)
         
         for commit in commits:
-            logger.info("[INFO] Analyze commit: %s", commit)
-            # Add commit to the database
-            commit = Commit(sha=commit)
+            logger.info("[INFO] Analyze commit: %s", commit.sha)
 
             # Run analysis and return paths to output files
             success, method_file_path, tacoco_file_path = _analysis(repo, tacoco_runner, parser_runner, output_path)
             
             if not success:
-                logger.error('Analysis for %s failed...', commit)
+                logger.error('Analysis for %s failed...', commit.sha)
                 continue
 
             with open(method_file_path) as method_file:
@@ -120,13 +118,13 @@ def _analysis(repo, tacoco_runner, parser_runner, output_path) -> Tuple[bool, st
     tacoco_runner.run()
 
     # Combine data
-    commit_sha = repo.get_current_commit()
+    commit: Commit = repo.get_current_commit()
     project_output_path = f"{output_path}{os.path.sep}{repo.get_project_name()}{os.path.sep}"
 
     logger.info("build successfull...")
     return (True,
-        f"{project_output_path}methods-{commit_sha}.json",
-        f"{project_output_path}{commit_sha}-cov-matrix.json"
+        f"{project_output_path}methods-{commit.sha}.json",
+        f"{project_output_path}{commit.sha}-cov-matrix.json"
     )
 
 def init_logger(logging_level=logging.DEBUG):

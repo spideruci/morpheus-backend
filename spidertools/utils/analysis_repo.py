@@ -4,6 +4,7 @@ import shutil
 import os
 from subprocess import Popen
 from typing import Dict
+from spidertools.storage.models.repository import Commit
 
 class AnalysisRepo(object):
     def __init__(self, url:str):
@@ -44,16 +45,21 @@ class AnalysisRepo(object):
     def close(self):
         self.repo.close()
 
-    def get_project_directory(self):
+    def get_project_directory(self) -> str:
         return self.target_dir
 
-    def get_project_name(self):
+    def get_project_name(self) -> str:
         return self.__get_project_name()
 
-    def get_current_commit(self):
-        return self.repo.head.object.hexsha
+    def get_current_commit(self) -> Commit:
+        print(self.repo.head.commit.hexsha, self.repo.head.commit.authored_datetime, self.repo.head.commit.author.name)
+        return Commit(
+            sha = self.repo.head.commit.hexsha,
+            datetime = self.repo.head.commit.authored_datetime,
+            author = self.repo.head.commit.author.name
+        )
 
-    def __get_project_name(self):
+    def __get_project_name(self) -> str:
         url = self.url
         if self.url.endswith('.git'):
             url = self.url[:-4]
