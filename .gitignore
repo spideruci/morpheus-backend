@@ -1,6 +1,4 @@
-__pycache__
-.pyc
-*.egg-info
+*.egg-info/
+__pycache__/
+results/
 venv/
-.eggs/
-.tox
