@@ -142,9 +142,10 @@ class TestMethodHistoryRoute(Resource):
             })
 
 
-        methods = Session.query(ProdMethod) \
+        methods = Session.query(ProdMethod, ProdMethodVersion.id) \
             .join(ProdMethodVersion, ProdMethod.id==ProdMethodVersion.method_id) \
-            .filter(ProdMethodVersion.id.in_(unique_method_version_id))  \
+            .filter(ProdMethodVersion.id.in_(unique_method_version_id)) \
+            .group_by(ProdMethod, ProdMethodVersion.id) \
             .all()
 
         commits = Session.query(Commit) \
@@ -153,12 +154,18 @@ class TestMethodHistoryRoute(Resource):
                 Commit.id.in_(unique_commit_ids)
             ).all()
         
+        def __merge_method_and_version(method_tuple):
+            method, method_version_id = method_tuple
+            method_dict = row2dict(method)
+            method_dict['method_version_id'] = method_version_id
+            return method_dict
+
         return {
             "project": row2dict(project),
             "test": row2dict(test),
             "coverage": {
                 "commits": list(map(row2dict, commits)),
-                "methods": list(map(row2dict, methods)),
+                "methods": list(map(__merge_method_and_version, methods)),
                 "edges": edges_formatted,
             }
         }, 200
