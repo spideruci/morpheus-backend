@@ -142,11 +142,19 @@ class TestMethodHistoryRoute(Resource):
             })
 
 
-        methods = Session.query(ProdMethod, ProdMethodVersion.id) \
+        method_query_result = Session.query(ProdMethod, ProdMethodVersion.id) \
             .join(ProdMethodVersion, ProdMethod.id==ProdMethodVersion.method_id) \
             .filter(ProdMethodVersion.id.in_(unique_method_version_id)) \
             .group_by(ProdMethod, ProdMethodVersion.id) \
             .all()
+
+        methods_version_to_global_id_map = {}
+
+        methods = list()
+        for method, version_id in method_query_result:
+            if version_id not in methods_version_to_global_id_map:
+                methods_version_to_global_id_map[version_id] = method.id
+            methods.append(method)
 
         commits = Session.query(Commit) \
             .filter(
@@ -154,18 +162,16 @@ class TestMethodHistoryRoute(Resource):
                 Commit.id.in_(unique_commit_ids)
             ).all()
         
-        def __merge_method_and_version(method_tuple):
-            method, method_version_id = method_tuple
-            method_dict = row2dict(method)
-            method_dict['method_version_id'] = method_version_id
-            return method_dict
+        for edge in edges_formatted:
+            edge['method_id'] = methods_version_to_global_id_map[edge['method_version_id']]
+
 
         return {
             "project": row2dict(project),
             "test": row2dict(test),
             "coverage": {
                 "commits": list(map(row2dict, commits)),
-                "methods": list(map(__merge_method_and_version, methods)),
+                "methods": list(map(row2dict, methods)),
                 "edges": edges_formatted,
             }
         }, 200
