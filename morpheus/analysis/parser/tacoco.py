@@ -87,15 +87,23 @@ class TacocoParser():
         return class_name, package_name
 
     def __parse_test_method(self, test_method: str) -> Tuple[TestMethod, str]:
+
+        def parse_class_and_package_name(package_and_class_name: str) -> Tuple[str, str]:
+            split_package_path = package_and_class_name.split('.')
+            class_name = split_package_path[-1]
+            package_name = '.'.join(split_package_path[0: len(split_package_path)-1])
+
+            return package_name, class_name
+
         # Parsing the class name
         if (result := re.search(r'runner:([a-zA-Z0-9._()$]+)', test_method)) is not None:
-            class_name = result.group(1)
+            package_name, class_name = parse_class_and_package_name(result.group(1))
         elif (result := re.search(r'class:([a-zA-Z0-9._()$]+)', test_method)) is not None:
-            class_name = result.group(1)
+            package_name, class_name = parse_class_and_package_name(result.group(1))
         elif (result := re.search(r'[a-zA-Z_0-9]+\(([a-zA-Z_0-9.$]+)\)', test_method)) is not None:
-            class_name = result.group(1)
+            package_name, class_name = parse_class_and_package_name(result.group(1))
         else:
-            logging.error("class_name error: %s", test_method)
+            logger.error("class_name error: %s", test_method)
             raise Exception("[ERROR] class_name error: {}".format(test_method))
 
         # Parsing the method name aka test name.
@@ -110,7 +118,7 @@ class TacocoParser():
         elif (result := re.search(r'([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]+\)', test_method)) is not None:
             method_name = result.group(1)
         else:
-            logging.error("method_name error: %s", test_method)
+            logger.error("method_name error: %s", test_method)
             raise Exception("[ERROR] method_name error: {}".format(test_method))
 
         # Parse if test passed or failed
@@ -118,7 +126,7 @@ class TacocoParser():
         if (result := re.search(r'(_F$)', test_method) is not None):
             test_result = False
 
-        test = TestMethod(class_name=class_name, method_name=method_name)
+        test = TestMethod(package_name=package_name ,class_name=class_name, method_name=method_name)
         return test, test_result
 
     def store(self,

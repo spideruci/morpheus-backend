@@ -54,7 +54,7 @@ class AnalysisRepo(object):
     def get_current_commit(self) -> Commit:
         return Commit(
             sha = self.repo.head.commit.hexsha,
-            datetime = self.repo.head.commit.authored_datetime,
+            datetime = str(self.repo.head.commit.authored_datetime),
             author = self.repo.head.commit.author.name
         )
 

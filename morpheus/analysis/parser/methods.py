@@ -1,7 +1,9 @@
 from morpheus.database.models.methods import ProdMethod, ProdMethodVersion
 from morpheus.database.models.repository import Commit
 from typing import Dict, List, Tuple
+import logging
 
+logger = logging.getLogger(__name__)
 
 class MethodParser():
     def set_commit(self, commit: Commit):
@@ -33,31 +35,33 @@ class MethodParser():
         return list(map(lambda method_dict : self.__parse_single_method(method_dict), methods_dict))
 
     def store(self, session, project, commit, methods: List[ProdMethod]):
+        method_count = session.query(ProdMethod).count()
+        logger.info('Number of methods stored in DB: %s', method_count)
 
-        print(f'Number of methods stored in DB: {session.query(ProdMethod).count()}')
-        for method, version in methods:
+        for method, _ in methods:
             method.project_id = project.id
 
-            if (result := session.query(ProdMethod) \
+            if (session.query(ProdMethod) \
                 .filter(
                     ProdMethod.project_id==method.project_id,
                     ProdMethod.method_name==method.method_name,
                     ProdMethod.method_decl==method.method_decl,
                     ProdMethod.class_name==method.class_name,
                     ProdMethod.package_name==method.package_name
-                ).first()) is None:
+                ).scalar()) is None:
                 session.add(method)
-                version.method_id = method.id
-            else:
-                version.method_id = result.id
 
+        session.commit()
+
+        for method, version in methods:
             if session.query(ProdMethodVersion)\
                 .filter(
                     ProdMethodVersion.method_id==version.method_id,
                     ProdMethodVersion.commit_id==version.commit_id,
                     ProdMethodVersion.line_start==version.line_start,
                     ProdMethodVersion.line_end==version.line_end,
-                ).first() is None:
+                ).scalar() is None:
+                version.method_id = method.id
                 session.add(version)
 
         session.commit()

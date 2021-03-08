@@ -44,7 +44,7 @@ def main():
     # Obtain all projects
     projects = []
     if not isdir(input_directory):
-        logging.error("Input directory doesn't exist")
+        logger.error("Input directory doesn't exist")
         return 1
 
     projects = get_directories(input_directory)
@@ -84,7 +84,7 @@ def main():
                 .set_commit(commit) \
                 .parse(methods_json)
             
-            logger.info("Start method storing")
+            logger.info("Start method storing, total: %s", len(parsed_methods))
             method_parser.store(
                 session=Session,
                 project=project,
@@ -98,6 +98,7 @@ def main():
             parsed_coverage = tacoco_parser\
                 .parse(coverage_json)
             
+            logger.debug('Number of testcases: %s', len(parsed_coverage))
 
             logger.info("Start Tacoco storing")
             tacoco_parser.store(

@@ -33,12 +33,13 @@ class TestMethod(Base):
 
     id = Column(Integer, primary_key=True)
     project_id = Column(Integer, ForeignKey('projects.id'))
+    package_name = Column(String)
     class_name = Column(String)
     method_name = Column(String)
 
     # covered_lines = relationship("LineCoverage", backref=backref('testmethod', lazy='dynamic'))
     
-    UniqueConstraint(project_id, method_name, class_name)
+    UniqueConstraint(project_id, method_name, class_name, package_name)
 
 class LineCoverage(Base):
     __tablename__ = 'linecoverage'
