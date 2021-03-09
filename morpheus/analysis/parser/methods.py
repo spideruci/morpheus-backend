@@ -54,6 +54,18 @@ class MethodParser():
         session.commit()
 
         for method, version in methods:
+            method_id = session.query(ProdMethod.id).filter(
+                ProdMethod.project_id==method.project_id,
+                ProdMethod.method_name==method.method_name,
+                ProdMethod.method_decl==method.method_decl,
+                ProdMethod.class_name==method.class_name,
+                ProdMethod.package_name==method.package_name,
+            ).scalar()
+
+            if method_id is None:
+                logger.error("Method not stored in database %s.%s.%s project_id: ", method.package_name, method.class_name, method.method_decl, method.project_id)
+                continue
+
             if session.query(ProdMethodVersion)\
                 .filter(
                     ProdMethodVersion.method_id==version.method_id,
@@ -61,7 +73,7 @@ class MethodParser():
                     ProdMethodVersion.line_start==version.line_start,
                     ProdMethodVersion.line_end==version.line_end,
                 ).scalar() is None:
-                version.method_id = method.id
+                version.method_id = method_id
                 session.add(version)
 
         session.commit()

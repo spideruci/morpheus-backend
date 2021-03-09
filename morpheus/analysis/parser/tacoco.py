@@ -107,15 +107,17 @@ class TacocoParser():
             raise Exception("[ERROR] class_name error: {}".format(test_method))
 
         # Parsing the method name aka test name.
-        if (result := re.search(r'test:([a-zA-Z0-9._()$]+)', test_method)) is not None:
+        if (result := re.search(r'test:([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]*\)', test_method)) is not None:
             method_name = result.group(1)
-        elif (result := re.search(r'method:([a-zA-Z0-9._()$]+)', test_method)) is not None:
+        elif (result := re.search(r'method:([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]*\)', test_method)) is not None:
             method_name = result.group(1)
-        elif (result := re.search(r'test-template:([a-zA-Z0-9._()$]+)', test_method)) is not None:
+        elif (result := re.search(r'test-template:([a-zA-Z0-9._(), $]+)', test_method)) is not None:
             method_name = result.group(1)
             invocation_number = re.search(r'test-template-invocation:#([0-9]+)', test_method).group(1)
-            method_name = f'{method_name}/{invocation_number}'
-        elif (result := re.search(r'([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]+\)', test_method)) is not None:
+            method_name = f'{method_name}[{invocation_number}]'
+        elif (result := re.search(r'([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]*\)', test_method)) is not None:
+            method_name = result.group(1)
+        elif (result := re.search(r'test:([a-zA-Z_0-9]+)', test_method)) is not None:
             method_name = result.group(1)
         else:
             logger.error("method_name error: %s", test_method)
@@ -136,45 +138,59 @@ class TacocoParser():
             coverage: List[Tuple[TestMethod, List[LineCoverage]]]
         ):
 
-        for test, lines in coverage:
+        for test, _ in coverage:
             test.project_id = project.id
 
-            if (existing_test := session.query(TestMethod)\
+            if (session.query(TestMethod)\
                 .filter(
                     TestMethod.project_id==test.project_id,
                     TestMethod.class_name==test.class_name,
                     TestMethod.method_name==test.method_name,
-                ).first()) is None:
+                    TestMethod.package_name==test.package_name
+                ).scalar()) is None:
 
                 session.add(test)
-            else:
-                test = existing_test
+
+        session.commit()
+
+        for test, lines in coverage:
+            test_id = session.query(TestMethod.id).filter(
+                TestMethod.package_name==test.package_name,
+                TestMethod.class_name==test.class_name,
+                TestMethod.method_name==test.method_name,
+                TestMethod.project_id==test.project_id,
+            ).scalar()
+
+            if test_id is None:
+                logger.error("Test not stored in database %s.%s.%s project_id: %s", test.package_name, test.class_name, test.method_name, test.project_id)
+                continue
 
             for line in lines:
                 method_version: ProdMethodVersion = session.query(ProdMethodVersion)\
-                    .filter(ProdMethodVersion.line_start <= line.line_number)\
-                    .filter(ProdMethodVersion.line_end >= line.line_number) \
+                    .filter(
+                        ProdMethodVersion.line_start <= line.line_number,
+                        line.line_number <= ProdMethodVersion.line_end,
+                        ProdMethodVersion.commit_id == commit.id
+                    ) \
                     .join(ProdMethod, ProdMethod.id==ProdMethodVersion.method_id)\
                     .filter(ProdMethod.file_path.contains(line.full_name))\
-                    .filter(ProdMethodVersion.commit_id==commit.id)\
                     .first()
 
                 if method_version is None:
                     continue
 
-                line.test_id = test.id
+                line.test_id = test_id
                 line.commit_id = commit.id
 
                 line.method_version_id = method_version.id
 
-
                 if session.query(LineCoverage)\
-                .filter(
-                    LineCoverage.commit_id == line.commit_id,
-                    LineCoverage.test_id == line.test_id,
-                    LineCoverage.method_version_id == line.method_version_id,
-                    LineCoverage.line_number == line.line_number,
-                ).first() is None:
+                    .filter(
+                        LineCoverage.commit_id == line.commit_id,
+                        LineCoverage.test_id == line.test_id,
+                        LineCoverage.method_version_id == line.method_version_id,
+                        LineCoverage.line_number == line.line_number,
+                    ).scalar() is None:
                     session.add(line)
 
         session.commit()
