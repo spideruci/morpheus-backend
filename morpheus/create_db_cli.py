@@ -20,7 +20,7 @@ def init_logger(logging_level=logging.DEBUG):
 def parse_arguments():
     parser = ArgumentParser(description='Create morpheus database')
 
-    parser.add_argument('input_folder', type=str, help='')
+    parser.add_argument('input_folder', type=str, help='Directory of the data.')
     
     return parser.parse_args()
 

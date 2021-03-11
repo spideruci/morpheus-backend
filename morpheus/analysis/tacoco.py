@@ -77,6 +77,8 @@ class TacocoRunner():
         if self.__run_tacoco_reader() != 0:
             logger.error("Unable to convert to readable format...")
             return 1
+        
+        return 0
 
     def __run_tacoco_coverage(self, debug=False):
         logging.info("[TACOCO] start coverage... %s", self.project_path)

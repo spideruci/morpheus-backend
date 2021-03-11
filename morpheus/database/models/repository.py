@@ -22,10 +22,10 @@ class Commit(Base):
     __tablename__ = 'commits'
 
     id = Column(Integer, primary_key=True)
-    project_id = Column(Integer, ForeignKey('projects.id'))
-    sha = Column(String)
-    author = Column(String)
-    datetime = Column(String)
+    project_id = Column(Integer, ForeignKey('projects.id'), nullable=False)
+    sha = Column(String, nullable=False)
+    author = Column(String, nullable=False)
+    datetime = Column(String, nullable=False)
 
     # test_results = relationship("LineCoverage", backref=backref('commit', lazy='dynamic'))
     # prod_method_versions = relationship("ProdMethodVersion", backref('commit', lazy='dynamic'))

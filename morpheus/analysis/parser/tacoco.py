@@ -1,10 +1,11 @@
 import re
-
-from sqlalchemy.sql.sqltypes import Boolean
+from sqlalchemy import and_
 from typing import Dict, List, Tuple
-from morpheus.database.models.methods import ProdMethod, ProdMethodVersion, TestMethod, LineCoverage
+from morpheus.database.models.methods import ProdMethodVersion, TestMethod, LineCoverage
 from morpheus.database.models.repository import Commit, Project
 import logging
+import timeit
+from morpheus.analysis.util.memoize import memoize
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +108,7 @@ class TacocoParser():
             raise Exception("[ERROR] class_name error: {}".format(test_method))
 
         # Parsing the method name aka test name.
-        if (result := re.search(r'test:([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]*\)', test_method)) is not None:
+        if (result := re.search(r'test:([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]+\)', test_method)) is not None:
             method_name = result.group(1)
         elif (result := re.search(r'method:([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]*\)', test_method)) is not None:
             method_name = result.group(1)
@@ -115,10 +116,13 @@ class TacocoParser():
             method_name = result.group(1)
             invocation_number = re.search(r'test-template-invocation:#([0-9]+)', test_method).group(1)
             method_name = f'{method_name}[{invocation_number}]'
-        elif (result := re.search(r'([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]*\)', test_method)) is not None:
+        elif (result := re.search(r'([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]+\)', test_method)) is not None:
             method_name = result.group(1)
-        elif (result := re.search(r'test:([a-zA-Z_0-9]+)', test_method)) is not None:
-            method_name = result.group(1)
+        elif (result := re.findall(r'test:([a-zA-Z_0-9]+)', test_method)) is not None:
+            if len(result) > 1:
+                method_name = test_method.split('.')[0]
+            else:
+                method_name = result[0]
         else:
             logger.error("method_name error: %s", test_method)
             raise Exception("[ERROR] method_name error: {}".format(test_method))
@@ -138,59 +142,60 @@ class TacocoParser():
             coverage: List[Tuple[TestMethod, List[LineCoverage]]]
         ):
 
+        start_time = timeit.default_timer()
         for test, _ in coverage:
             test.project_id = project.id
 
-            if (session.query(TestMethod)\
+            if (test_id := session.query(TestMethod.id)\
                 .filter(
                     TestMethod.project_id==test.project_id,
+                    TestMethod.package_name==test.package_name,
                     TestMethod.class_name==test.class_name,
                     TestMethod.method_name==test.method_name,
-                    TestMethod.package_name==test.package_name
                 ).scalar()) is None:
-
                 session.add(test)
+            else:
+                test.id = test_id
 
+        logger.debug('Iterating through tests: %s', timeit.default_timer() - start_time)
+
+        start_time = timeit.default_timer()
         session.commit()
+        logger.debug('Adding tests to database: %s', timeit.default_timer() - start_time)
+
+        start_time = timeit.default_timer()
+
+        @memoize
+        def __get_method_version_id(commid_id: int, full_name: str, line_number: int):
+            return session.query(ProdMethodVersion.id) \
+                    .filter(
+                        and_(
+                            ProdMethodVersion.commit_id == commid_id,
+                            ProdMethodVersion.file_path.contains(full_name),
+                            ProdMethodVersion.line_start <= line_number,
+                            ProdMethodVersion.line_end >= line.line_number,
+                        )
+                    ).first()
 
         for test, lines in coverage:
-            test_id = session.query(TestMethod.id).filter(
-                TestMethod.package_name==test.package_name,
-                TestMethod.class_name==test.class_name,
-                TestMethod.method_name==test.method_name,
-                TestMethod.project_id==test.project_id,
-            ).scalar()
-
-            if test_id is None:
+            if test.id is None:
                 logger.error("Test not stored in database %s.%s.%s project_id: %s", test.package_name, test.class_name, test.method_name, test.project_id)
                 continue
 
             for line in lines:
-                method_version: ProdMethodVersion = session.query(ProdMethodVersion)\
-                    .filter(
-                        ProdMethodVersion.line_start <= line.line_number,
-                        line.line_number <= ProdMethodVersion.line_end,
-                        ProdMethodVersion.commit_id == commit.id
-                    ) \
-                    .join(ProdMethod, ProdMethod.id==ProdMethodVersion.method_id)\
-                    .filter(ProdMethod.file_path.contains(line.full_name))\
-                    .first()
+                method_version_id = __get_method_version_id(commit.id, line.full_name, line.line_number)
 
-                if method_version is None:
-                    continue
+                if method_version_id is not None:
+                    method_version_id = method_version_id[0]
 
-                line.test_id = test_id
                 line.commit_id = commit.id
+                line.test_id = test.id
+                line.method_version_id = method_version_id
+                
+                session.add(line)
 
-                line.method_version_id = method_version.id
+        logger.debug('Iterating through lines: %s', timeit.default_timer() - start_time)
 
-                if session.query(LineCoverage)\
-                    .filter(
-                        LineCoverage.commit_id == line.commit_id,
-                        LineCoverage.test_id == line.test_id,
-                        LineCoverage.method_version_id == line.method_version_id,
-                        LineCoverage.line_number == line.line_number,
-                    ).scalar() is None:
-                    session.add(line)
-
+        start_time = timeit.default_timer()
         session.commit()
+        logger.debug('Adding lines to database: %s', timeit.default_timer() - start_time)

@@ -45,7 +45,7 @@ class TestMethodsInCommitRoute(Resource):
             return {"error": f"Project '{project_id}' was not found..."}, 404
 
         tests = Session.query(TestMethod)\
-            .filter(TestMethod.project_id)\
+            .filter(TestMethod.project_id == project_id)\
             .all()
 
         if not tests:

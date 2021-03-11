@@ -38,43 +38,33 @@ class MethodParser():
         method_count = session.query(ProdMethod).count()
         logger.info('Number of methods stored in DB: %s', method_count)
 
-        for method, _ in methods:
+        for method, version in methods:
             method.project_id = project.id
 
-            if (session.query(ProdMethod) \
+            if (method_id := session.query(ProdMethod.id) \
                 .filter(
                     ProdMethod.project_id==method.project_id,
                     ProdMethod.method_name==method.method_name,
                     ProdMethod.method_decl==method.method_decl,
                     ProdMethod.class_name==method.class_name,
-                    ProdMethod.package_name==method.package_name
+                    ProdMethod.package_name==method.package_name,
+                    ProdMethod.file_path==method.file_path,
                 ).scalar()) is None:
-                session.add(method)
 
+                session.add(method)
+            else:
+                method.id = method_id
+        
         session.commit()
 
         for method, version in methods:
-            method_id = session.query(ProdMethod.id).filter(
-                ProdMethod.project_id==method.project_id,
-                ProdMethod.method_name==method.method_name,
-                ProdMethod.method_decl==method.method_decl,
-                ProdMethod.class_name==method.class_name,
-                ProdMethod.package_name==method.package_name,
-            ).scalar()
-
-            if method_id is None:
-                logger.error("Method not stored in database %s.%s.%s project_id: ", method.package_name, method.class_name, method.method_decl, method.project_id)
+            if method.id is None:
+                logger.error("Method not stored in database %s %s.%s.%s project_id: %s", method.file_path, method.package_name, method.class_name, method.method_decl, method.project_id)
                 continue
 
-            if session.query(ProdMethodVersion)\
-                .filter(
-                    ProdMethodVersion.method_id==version.method_id,
-                    ProdMethodVersion.commit_id==version.commit_id,
-                    ProdMethodVersion.line_start==version.line_start,
-                    ProdMethodVersion.line_end==version.line_end,
-                ).scalar() is None:
-                version.method_id = method_id
-                session.add(version)
+            version.method_id = method.id
+            version.file_path = method.file_path
+            session.add(version)
 
         session.commit()
 
