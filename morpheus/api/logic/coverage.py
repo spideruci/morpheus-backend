@@ -1,11 +1,13 @@
 from morpheus.database.models.methods import LineCoverage, TestMethod, ProdMethod, ProdMethodVersion
 from morpheus.database.models.repository import Project, Commit
+from sqlalchemy import and_
 
 class CommitQuery():
     @staticmethod
     def get_commits(session, project: Project, ):
         return session.query(Commit)\
             .filter(Commit.project_id==project.id)\
+            .order_by(Commit.id.desc())\
             .all()
 
     @staticmethod
@@ -19,6 +21,7 @@ class ProjectQuery():
     @staticmethod
     def get_projects(session):
         return session.query(Project)\
+            .order_by(Project.project_name.desc()) \
             .all()
 
     @staticmethod
@@ -37,7 +40,7 @@ class MethodQuery():
     @staticmethod
     def get_method_versions(session, method_id):
         return session.query(ProdMethodVersion)\
-            .filter(ProdMethod.id==method_id)\
+            .filter(ProdMethodVersion.method_id==method_id)\
             .all()
 
 
@@ -46,8 +49,15 @@ class MethodCoverageQuery():
     def get_tests(session, project, commit):
         return session.query(TestMethod) \
             .join(LineCoverage, (LineCoverage.test_id==TestMethod.id)) \
-            .filter(TestMethod.project_id==project.id) \
-            .filter(LineCoverage.commit_id==commit.id) \
+            .filter(and_(
+                TestMethod.project_id==project.id,
+                LineCoverage.commit_id==commit.id
+            ))\
+            .order_by(
+                    TestMethod.package_name.desc(),
+                    TestMethod.class_name.desc(),
+                    TestMethod.method_name.desc()
+            )\
             .all()
 
     @staticmethod
@@ -60,7 +70,12 @@ class MethodCoverageQuery():
         if commit is not None:
             query.filter(ProdMethodVersion.commit_id==commit.id)\
 
-        return query.all()
+        return query.order_by(
+                ProdMethod.file_path.desc(),
+                ProdMethod.package_name.desc(),
+                ProdMethod.class_name.desc(),
+                ProdMethod.method_decl.desc()
+        ).all()
 
     @staticmethod
     def get_edges(session, commit):

@@ -121,7 +121,10 @@ class TestMethodHistoryRoute(Resource):
 
         # Covered lines, but filtered to method and commit (so per pair only one covered line)
         edges = Session.query(LineCoverage.commit_id, LineCoverage.method_version_id, LineCoverage.test_result) \
-            .filter(LineCoverage.test_id == test.id) \
+            .filter(
+                LineCoverage.test_id == test.id,
+                LineCoverage.method_version_id !=  None
+            ) \
             .group_by(LineCoverage.method_version_id, LineCoverage.commit_id) \
             .all()
 
@@ -140,7 +143,6 @@ class TestMethodHistoryRoute(Resource):
                 "method_version_id": method_version_id,
                 "test_result": result
             })
-
 
         method_query_result = Session.query(ProdMethod, ProdMethodVersion.id) \
             .join(ProdMethodVersion, ProdMethod.id==ProdMethodVersion.method_id) \
