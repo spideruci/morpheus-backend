@@ -11,7 +11,7 @@ setup(
     long_description=open('README.md').read(),
     install_requires = [
         'GitPython==3.1.3',
-        'pyyaml==5.3.1', 
+        'pyyaml==5.4', 
         'numpy==1.19.0',
         'flask==1.1.2',
         'flask-cors==3.0.8',
