@@ -22,7 +22,7 @@ ns = api.namespace(
 class SingleMethodRoute(Resource):
     
     @ns.response(200, 'Success')
-    @ns.response(404, 'Method not found within given project and/or commit.')
+    @ns.response(404, 'Method not found.')
     def get(self, method_id):
 
         method = Session.query(ProdMethod) \

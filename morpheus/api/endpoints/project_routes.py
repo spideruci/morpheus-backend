@@ -62,7 +62,7 @@ class ProjectRoute(Resource):
         description='Retrieve all commits for given project id',
         param={'project_id': 'Project identifier'}
     )
-class CommitRoute(Resource):
+class CommitsRoute(Resource):
 
     @ns.response(200, "Success")
     @ns.response(404, "Commit not found.")
