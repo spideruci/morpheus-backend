@@ -1,6 +1,8 @@
 import re
 from sqlalchemy import and_
+from sqlalchemy import exc
 from typing import Dict, List, Tuple
+from morpheus.analysis.parser.parsing_engines import parse_tacoco_test_string
 from morpheus.database.models.methods import ProdMethodVersion, TestMethod, LineCoverage
 from morpheus.database.models.repository import Commit, Project
 import logging
@@ -77,63 +79,15 @@ class TacocoParser():
         logger.info("Finished parsing tacoco data...")
         return result
 
-    def _split_file_name(self, method_name: str) -> Tuple[str, str]:
-        """
-        @param method_name: str 
-
-        """
-        path = method_name.split('/')
-        class_name = path[len(path) - 1].split('.')[0]
-        package_name = '.'.join(path[0 : len(path) - 1])
-        return class_name, package_name
-
     def __parse_test_method(self, test_method: str) -> Tuple[TestMethod, str]:
-
-        def parse_class_and_package_name(package_and_class_name: str) -> Tuple[str, str]:
-            split_package_path = package_and_class_name.split('.')
-            class_name = split_package_path[-1]
-            package_name = '.'.join(split_package_path[0: len(split_package_path)-1])
-
-            return package_name, class_name
-
-        # Parsing the class name
-        if (result := re.search(r'runner:([a-zA-Z0-9._()$]+)', test_method)) is not None:
-            package_name, class_name = parse_class_and_package_name(result.group(1))
-        elif (result := re.search(r'class:([a-zA-Z0-9._()$]+)', test_method)) is not None:
-            package_name, class_name = parse_class_and_package_name(result.group(1))
-        elif (result := re.search(r'[a-zA-Z_0-9]+\(([a-zA-Z_0-9.$]+)\)', test_method)) is not None:
-            package_name, class_name = parse_class_and_package_name(result.group(1))
-        else:
-            logger.error("class_name error: %s", test_method)
-            raise Exception("[ERROR] class_name error: {}".format(test_method))
-
-        # Parsing the method name aka test name.
-        if (result := re.search(r'test:([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]+\)', test_method)) is not None:
-            method_name = result.group(1)
-        elif (result := re.search(r'method:([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]*\)', test_method)) is not None:
-            method_name = result.group(1)
-        elif (result := re.search(r'test-template:([a-zA-Z0-9._(), $]+)', test_method)) is not None:
-            method_name = result.group(1)
-            invocation_number = re.search(r'test-template-invocation:#([0-9]+)', test_method).group(1)
-            method_name = f'{method_name}[{invocation_number}]'
-        elif (result := re.search(r'([a-zA-Z_0-9]+)\([a-zA-Z_0-9.$]+\)', test_method)) is not None:
-            method_name = result.group(1)
-        elif (result := re.findall(r'test:([a-zA-Z_0-9]+)', test_method)) is not None:
-            if len(result) > 1:
-                method_name = test_method.split('.')[0]
-            else:
-                method_name = result[0]
-        else:
+        try:
+            (package_name, class_name, method_name, is_passing) = parse_tacoco_test_string(test_method)
+        except:
             logger.error("method_name error: %s", test_method)
             raise Exception("[ERROR] method_name error: {}".format(test_method))
 
-        # Parse if test passed or failed
-        test_result = True
-        if (result := re.search(r'(_F$)', test_method) is not None):
-            test_result = False
-
         test = TestMethod(package_name=package_name ,class_name=class_name, method_name=method_name)
-        return test, test_result
+        return test, is_passing
 
     def store(self,
             session,
@@ -183,14 +137,19 @@ class TacocoParser():
                 continue
 
             for line in lines:
-                method_version_id = __get_method_version_id(commit.id, line.full_name, line.line_number)
-
-                if method_version_id is not None:
-                    method_version_id = method_version_id[0]
-
+                result = __get_method_version_id(commit.id, line.full_name, line.line_number)
+                
                 line.commit_id = commit.id
                 line.test_id = test.id
-                line.method_version_id = method_version_id
+
+                if result is None:
+                    # logger.warn("Line version not stored: %s, %s, %s, %s, %s, %s, %s", line.id, line.commit_id, line.test_id, line.method_version_id, line.test_result, line.full_name, line.line_number)
+                    continue
+
+                (line.method_version_id, ) = result
+
+                # if line.commit_id == 2 and line.test_id == 2599 and line.method_version_id==1760  and line.line_number == 173:
+                #     logger.debug("Test: %s, %s, %s, %s", test.id, test.method_name, test.class_name, test.package_name)
                 
                 session.add(line)
 

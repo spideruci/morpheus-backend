@@ -53,4 +53,4 @@ class LineCoverage(Base):
     full_name = Column(String, nullable=False)
     line_number = Column(Integer, nullable=False)
     
-    UniqueConstraint(commit_id, test_id, full_name, line_number)
+    UniqueConstraint(commit_id, test_id, method_version_id, line_number)
