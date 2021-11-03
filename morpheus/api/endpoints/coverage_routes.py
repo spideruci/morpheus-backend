@@ -1,3 +1,4 @@
+import logging
 from flask_restx.resource import Resource
 from morpheus.api.rest import api
 from morpheus.database.db import Session
@@ -11,6 +12,8 @@ ns = api.namespace(
     description='Endpoint to obtain different kind of coverage information for a given project, e.g., code coverage, or historical coverage.',
     authorization=False
 )
+
+logger = logging.getLogger(__name__)
 
 ############################################################### 
 # Coverage routes

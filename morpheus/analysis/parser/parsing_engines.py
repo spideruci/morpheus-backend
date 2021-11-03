@@ -7,15 +7,15 @@ logger = logging.getLogger(__name__)
 class TestEngine(Enum):
     JUPITER   = 'junit-jupiter',
     VINTAGE   = 'junit-vintage',
-    TESTNG    = 'testng'
-    ERROR     = 'error'
+    TESTNG    = 'testng',
+    NOENGINE  = 'noengine',
 
 def determine_parsing_engine(test_string: str) -> TestEngine:
     match_result = re.search(r'engine:([a-zA-Z]+-*[a-zA-Z]+)', test_string)
 
     if match_result is None:
-        logger.error("unable to find engine: %s", test_string)
-        return TestEngine.ERROR
+        logger.warning("unable to find engine: %s", test_string)
+        return TestEngine.NOENGINE
 
     engine = match_result.group(1)
     match engine:
@@ -24,8 +24,8 @@ def determine_parsing_engine(test_string: str) -> TestEngine:
         case 'junit-vintage':
             return TestEngine.VINTAGE
         case _:
-            logger.error("Engine '%s' is currently not supported.", engine)
-            return TestEngine.ERROR
+            logger.warning("No test engine found: '%s'.", test_string)
+            return TestEngine.NOENGINE
         
 
 def parse_tacoco_test_string(test_string: str):
@@ -41,11 +41,13 @@ def __parse_package_name(engine, test_method):
     path = ''
     match engine:
         case TestEngine.JUPITER:
-            path = re.search(r'class:([a-zA-Z0-9\._()$]+)', test_method).group(1)
+            path = re.search(r'class:([\w\._()$]+)', test_method).group(1)
             if path is None:
-                path = re.search(r'runner:([a-zA-Z0-9\._()$]+)', test_method).group(1)
+                path = re.search(r'runner:([\w\._()$]+)', test_method).group(1)
         case TestEngine.VINTAGE:
-            path = re.search(r'runner:([a-zA-Z0-9\._()$]+)', test_method).group(1)
+            path = re.search(r'runner:([\w\._()$]+)', test_method).group(1)
+        case TestEngine.NOENGINE:
+            path = re.search(r'[\w\_]+\(([\w\.]+)\)', test_method).group(1)
     
     split_path = path.split('.')
     class_name = split_path[-1]
@@ -58,11 +60,11 @@ def __parse_method_name(engine, test_method):
     match engine:
         case TestEngine.JUPITER:
             # Regular test
-            if (result := re.search(r'method:([\w%=,\-\.,\s\\]+\([\w\s,.$]*\))', test_method)) is not None:
+            if (result := re.search(r'method:([\w%=,\-\.,\s\\]+)\([\w\s,.$]*\)', test_method)) is not None:
                 return result.group(1)
 
             # Parameterized Tests
-            elif (result := re.search(r'test-template:([\w%=,\-\.,\s\\]+\([\w\s\-,.$]*\))', test_method)) is not None:
+            elif (result := re.search(r'test-template:([\w%=,\-\.,\s\\]+)\([\w\s\-,.$]*\)', test_method)) is not None:
                 method_name = result.group(1)
                 invocation_number = re.search(r'test-template-invocation:#([0-9]+)', test_method).group(1)
                 return f'{method_name}[{invocation_number}]'
@@ -72,20 +74,20 @@ def __parse_method_name(engine, test_method):
             results = re.findall(r'(test:)', test_method)
             match len(results):
                 case 1:
-                    result = re.search(r'test:([\w%=,\-\.,\s\\]+\([\w\s,.$]*\))', test_method)
+                    result = re.search(r'test:([\w%=,\-\.,\s\\]+)\([\w\s,.$]*\)', test_method)
                     return result.group(1)
                 case 2:
-                    result_p1 = re.search(r'test:([\w%=,\-\.,\s\\]+\([\w\s,.$]*\))', test_method).group(1)
+                    # Paramterized test
+                    result_p1 = re.search(r'test:([\w%=,\-\.,\s\\]+)\([\w\s,.$]*\)', test_method).group(1)
                     result_p2 = re.search(r'test:([\w%=,\-\.,\s\\]+)', test_method).group(1)
                     return f"{result_p1}[{result_p2}]"
                 case _:
                     return test_method.split('.')[0]
+        case TestEngine.NOENGINE:
+            if (result := re.search(r'([\w\_]+)\([\w\.]+\)', test_method)) is not None:
 
-            # elif (result := re.findall(r'\[test:([^\]\[]+)\]', test_method)) is not None:
-            #     if len(result) > 1:
-                    
-            #     else:
-            #         return result[0]
+                return f"{result.group(1)}"
+
     raise Exception("Unable to parse method")
 
 def __is_passing_test(test_method):

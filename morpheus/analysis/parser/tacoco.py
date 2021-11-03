@@ -76,6 +76,8 @@ class TacocoParser():
                 return test, line_coverage
             
         result = list(map(_merge, coverage.keys()))
+        logger.debug("Number of tests %s", len(result))
+
         logger.info("Finished parsing tacoco data...")
         return result
 
@@ -143,7 +145,7 @@ class TacocoParser():
                 line.test_id = test.id
 
                 if result is None:
-                    # logger.warn("Line version not stored: %s, %s, %s, %s, %s, %s, %s", line.id, line.commit_id, line.test_id, line.method_version_id, line.test_result, line.full_name, line.line_number)
+                    # logger.warning("Line version not stored: %s, %s, %s, %s, %s, %s, %s", line.id, line.commit_id, line.test_id, line.method_version_id, line.test_result, line.full_name, line.line_number)
                     continue
 
                 (line.method_version_id, ) = result

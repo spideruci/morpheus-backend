@@ -1,3 +1,4 @@
+import logging
 from flask import Flask
 from flask_cors import CORS
 from morpheus.api.rest import api
@@ -8,6 +9,15 @@ from morpheus.api.endpoints.coverage_routes import ns as coverage_namespace
 from morpheus.config import Config
 
 from morpheus.database.db import Session, engine, init_db
+
+logger = logging.getLogger(__name__)
+
+def init_logger(logging_level=logging.DEBUG):
+    logging.basicConfig(
+        level=logging_level,
+        format='[%(levelname)s] %(asctime)s: %(message)s',
+        datefmt='%H:%M:%S'
+    )
 
 def create_morpheus_backend():
     app =  Flask(__name__)
@@ -30,6 +40,7 @@ def create_morpheus_backend():
     return app
 
 def main():
+    init_logger()
     app = create_morpheus_backend()
     
     app.run(

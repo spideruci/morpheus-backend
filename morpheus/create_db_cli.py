@@ -1,10 +1,10 @@
 import logging
+import json
+import os
 from argparse import ArgumentParser
+from os.path import isdir, join, sep
 from morpheus.analysis.parser.methods import MethodParser
 from morpheus.analysis.parser.tacoco import TacocoParser
-import os
-from os.path import isdir, join, sep
-import json
 from morpheus.database.models.repository import Project, Commit
 from morpheus.database.db import Session, engine, init_db
 
@@ -66,6 +66,9 @@ def main():
         for commit_sha in get_directories(f'{input_directory}{sep}{project_name}'):
 
             logger.info(f"Start storing commit '{commit_sha}' of project'{project_name}' in database.")
+
+            # ToDo: Split parsing and storing into separate parts, if coverage doesn't exist, don't store the commit.
+
             # Store Commit
             commit_json = load_json(f'{input_directory}{sep}{project_name}{sep}{commit_sha}{sep}commit.json')
             commit = Commit(**commit_json, project_id=project.id)

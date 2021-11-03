@@ -2,6 +2,20 @@ import unittest
 
 from morpheus.analysis.parser.parsing_engines import TestEngine, determine_parsing_engine, parse_tacoco_test_string
 
+class TestParsingTestMethodsNoEngine(unittest.TestCase):
+    test_string = "testGetFreeSpaceWindows_String_EmptyMultiLineResponse(org.apache.commons.io.FileSystemUtilsTestCase)"
+
+    def test_parsing_test_case(self):
+        test_string = TestParsingTestMethodsNoEngine.test_string
+
+        package, class_name, method_name, is_passing = parse_tacoco_test_string(test_string)
+
+        assert package == "org.apache.commons.io"
+        assert class_name == "FileSystemUtilsTestCase"
+        assert method_name == "testGetFreeSpaceWindows_String_EmptyMultiLineResponse"
+        assert is_passing
+
+
 class TestParsingVintageTestMethods(unittest.TestCase):
 
     regular_test_string = "testHandleStartDirectoryFalse.[engine:junit-vintage]/[runner:org.apache.commons.io.DirectoryWalkerTestCaseJava4]/[test:testHandleStartDirectoryFalse(org.apache.commons.io.DirectoryWalkerTestCaseJava4)]"
@@ -26,7 +40,7 @@ class TestParsingVintageTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io"
         assert class_name == "DirectoryWalkerTestCaseJava4"
-        assert method_name == "testHandleStartDirectoryFalse(org.apache.commons.io.DirectoryWalkerTestCaseJava4)"
+        assert method_name == "testHandleStartDirectoryFalse"
         assert is_passing
 
 
@@ -52,7 +66,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.filefilter"
         assert class_name == "FileFilterTestCase"
-        assert method_name == "testMagicNumberFileFilterStringOffset()"
+        assert method_name == "testMagicNumberFileFilterStringOffset"
         assert is_passing
 
 
@@ -66,7 +80,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.input"
         assert class_name == "ReversedLinesFileReaderTestParamBlockSize"
-        assert method_name == "testUTF16LEFile%5BBlockSize\u003d4,096%5D(org.apache.commons.io.input.ReversedLinesFileReaderTestParamBlockSize)[%5BBlockSize\u003d4,096%5D]"
+        assert method_name == "testUTF16LEFile%5BBlockSize\u003d4,096%5D[%5BBlockSize\u003d4,096%5D]"
         assert is_passing
 
 
@@ -90,7 +104,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.file"
         assert class_name == "DeletingPathVisitorTest"
-        assert method_name == "testDeleteEmptyDirectory(org.apache.commons.io.file.DeletingPathVisitor)[1]"
+        assert method_name == "testDeleteEmptyDirectory[1]"
         assert is_passing
 
 
@@ -105,7 +119,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.output"
         assert class_name == "ByteArrayOutputStreamTestCase"
-        assert method_name == "testToBufferedInputStreamEmpty(java.lang.String, org.apache.commons.io.function.IOFunction)[4]"
+        assert method_name == "testToBufferedInputStreamEmpty[4]"
         assert is_passing
 
     parameterized_test_string3 = "[1] ByteArrayOutputStream.[engine:junit-jupiter]/[class:org.apache.commons.io.output.ByteArrayOutputStreamTestCase]/[test-template:testToInputStreamEmpty(java.lang.String, org.apache.commons.io.output.ByteArrayOutputStreamTestCase$BAOSFactory)]/[test-template-invocation:#1]"
@@ -119,7 +133,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.output"
         assert class_name == "ByteArrayOutputStreamTestCase"
-        assert method_name == "testToInputStreamEmpty(java.lang.String, org.apache.commons.io.output.ByteArrayOutputStreamTestCase$BAOSFactory)[1]"
+        assert method_name == "testToInputStreamEmpty[1]"
         assert is_passing
 
     parameterized_test_string4 = "test-file-utf8-win-linebr.bin, encoding\u003dUTF-8, blockSize\u003dnull, useNonDefaultFileSystem\u003dfalse, isResource\u003dtrue.[engine:junit-jupiter]/[class:org.apache.commons.io.input.ReversedLinesFileReaderTestParamFile]/[test-template:testDataIntegrityWithBufferedReader(java.lang.String, java.lang.String, java.lang.Integer, boolean, boolean)]/[test-template-invocation:#9]"
@@ -133,7 +147,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.input"
         assert class_name == "ReversedLinesFileReaderTestParamFile"
-        assert method_name == "testDataIntegrityWithBufferedReader(java.lang.String, java.lang.String, java.lang.Integer, boolean, boolean)[9]"
+        assert method_name == "testDataIntegrityWithBufferedReader[9]"
         assert is_passing
 
     parameterized_test_string5 = "testDataIntegrityWithBufferedReader[test-file-utf8-win-linebr.bin, charset\u003dUTF-8].[engine:junit-vintage]/[runner:org.apache.commons.io.input.ReversedLinesFileReaderTestParamFile]/[test:%5Btest-file-utf8-win-linebr.bin, charset\u003dUTF-8%5D%5B0%5D]/[test:testDataIntegrityWithBufferedReader%5Btest-file-utf8-win-linebr.bin, charset\u003dUTF-8%5D(org.apache.commons.io.input.ReversedLinesFileReaderTestParamFile)]"
@@ -147,7 +161,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.input"
         assert class_name == "ReversedLinesFileReaderTestParamFile"
-        assert method_name == "testDataIntegrityWithBufferedReader%5Btest-file-utf8-win-linebr.bin, charset\u003dUTF-8%5D(org.apache.commons.io.input.ReversedLinesFileReaderTestParamFile)[%5Btest-file-utf8-win-linebr.bin, charset\u003dUTF-8%5D%5B0%5D]"
+        assert method_name == "testDataIntegrityWithBufferedReader%5Btest-file-utf8-win-linebr.bin, charset\u003dUTF-8%5D[%5Btest-file-utf8-win-linebr.bin, charset\u003dUTF-8%5D%5B0%5D]"
         assert is_passing
 
 class TestCucumberTest(unittest.TestCase):
