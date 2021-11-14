@@ -12,7 +12,7 @@ setup(
         'pyyaml==5.3.1',
         'GitPython==3.1.12',
         'flask==1.1.2',
-        'flask-cors==3.0.8',
+        'flask-cors==3.0.9',
         'sqlalchemy==1.3',
         'flask-restx==0.2.0',
         'python-dotenv==0.15.0'
