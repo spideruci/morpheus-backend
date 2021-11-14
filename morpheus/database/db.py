@@ -2,8 +2,27 @@ from morpheus.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-engine = create_engine(f"{Config.SQLALCHEMY_DATABASE_TYPE}{Config.DATABASE_PATH}")
-Session = scoped_session(sessionmaker(bind=engine))
+
+engine = None
+Session = None
+
+def get_session():
+    global Session
+    return Session
+
+def get_engine():
+    global engine
+    return engine
+
+def create_engine_and_session():
+    global engine 
+    global Session
+    print(f"{Config.SQLALCHEMY_DATABASE_TYPE}{Config.DATABASE_PATH}")
+    engine = create_engine(f"{Config.SQLALCHEMY_DATABASE_TYPE}{Config.DATABASE_PATH}")
+    Session = scoped_session(sessionmaker(bind=engine))
+
+    return (engine, Session)
+
 
 
 def init_db(engine):

@@ -1,7 +1,7 @@
 import logging
 from flask_restx.resource import Resource
 from morpheus.api.rest import api
-from morpheus.database.db import Session
+from morpheus.database.db import get_session
 from morpheus.database.util import row2dict
 from morpheus.database.models.repository import Project, Commit
 from morpheus.database.models.methods import LineCoverage, ProdMethod, ProdMethodVersion, TestMethod
@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 @ns.route('/projects/<project_id>/commits/<commit_id>')
 class MethodTestCoverageRoute(Resource):
     def get(self, project_id, commit_id):
+        Session = get_session()
         project: Project = ProjectQuery.get_project(Session, project_id)
 
         if project is None:
@@ -54,6 +55,7 @@ class ProdMethodHistoryRoute(Resource):
     @ns.response(200, 'Success')
     @ns.response(404, 'Method not found.')
     def get(self, project_id, method_id):
+        Session = get_session()
 
         project: Project = ProjectQuery.get_project(Session, project_id)
 
@@ -107,6 +109,7 @@ class TestMethodHistoryRoute(Resource):
     @ns.response(200, 'Success')
     @ns.response(404, 'Test not found.')
     def get(self, project_id, test_id):
+        Session = get_session()
 
         project = Session.query(Project) \
             .filter(Project.id == project_id) \

@@ -4,12 +4,12 @@ from morpheus.api.endpoints.project_routes import ProjectsRoute, CommitsRoute
 from morpheus.api.endpoints.methods_routes import MethodsInProjectRoute
 from morpheus.api.endpoints.tests_routes import TestMethodsInCommitRoute
 from morpheus.api.endpoints.coverage_routes import MethodTestCoverageRoute, ProdMethodHistoryRoute, TestMethodHistoryRoute
-from morpheus.database.db import engine, init_db
+from morpheus.config import Config
+from morpheus.database.db import create_engine_and_session, init_db
 from functools import wraps
 from time import time
 import json
 from pathlib import Path
-from morpheus.database.models.repository import Commit
 from multiprocessing import Pool, cpu_count
 import os
 
@@ -78,6 +78,7 @@ def get_method_coverage(project_id: int, base_dir: Path):
 
 @timeit
 def get_test_coverage(project_id: int, base_dir: Path):
+    logger.info("Start obtaining test coverage")
     tests_route = TestMethodsInCommitRoute()
     coverage = TestMethodHistoryRoute()
 
@@ -88,10 +89,12 @@ def get_test_coverage(project_id: int, base_dir: Path):
         if not os.path.exists(dir):
             os.makedirs(dir)
 
+    logger.info("Get all tests")
     (test_response, _) = tests_route.get(project_id)
 
     store(test_list_dir, f'tests.json', test_response)
 
+    logger.info("Obtain test coverage...")
     for test in test_response.get('tests'):
         test_id = test.get('id')
 
@@ -110,7 +113,11 @@ def store(directory: Path, object_id, content):
         json.dump(content, f)
 
 
-def extract_coverage(output_path):
+def extract_coverage(database: Path, output_path: Path):
+
+    Config.DATABASE_PATH = database.resolve()
+
+    (engine, Session) = create_engine_and_session()
     init_db(engine)
 
     project_route = ProjectsRoute()
@@ -124,7 +131,6 @@ def extract_coverage(output_path):
 
     store(root_dir, 'projects.json', projects_response)
 
-
     with Pool(cpu_count()) as p:
         collectors = [get_commit_coverage, get_method_coverage, get_test_coverage]
         projects = projects_response.get('projects')
@@ -132,4 +138,7 @@ def extract_coverage(output_path):
         logger.info(projects)
         for f in collectors:
             project_ids = map(lambda p : p.get('id'), projects)
-            p.map(functools.partial(f, base_dir=root_dir), project_ids)
+
+            for pid in project_ids:
+                f(pid, root_dir)
+

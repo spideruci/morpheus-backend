@@ -1,6 +1,6 @@
 from flask_restx.resource import Resource
 from morpheus.api.rest import api
-from morpheus.database.db import Session
+from morpheus.database.db import get_session
 from morpheus.database.util import row2dict
 from morpheus.database.models.repository import Project, Commit
 
@@ -21,6 +21,7 @@ class ProjectsRoute(Resource):
     @ns.response(200, "Success")
     @ns.response(404, "No projects in database")
     def get(self):
+        Session = get_session()
         projects = Session.query(Project).all()
 
         if not projects:
@@ -35,6 +36,7 @@ class ProjectRoute(Resource):
     @ns.response(200, "Success")
     @ns.response(404, "Project was not found.")
     def get(self, project_id: int):
+        Session = get_session()
         project = Session.query(Project)\
             .filter(Project.id==project_id)\
             .first()
@@ -67,6 +69,7 @@ class CommitsRoute(Resource):
     @ns.response(200, "Success")
     @ns.response(404, "Commit not found.")
     def get(self, project_id):
+        Session = get_session()
         commits = Session.query(Commit) \
             .filter(Commit.project_id == project_id) \
             .all()
@@ -89,6 +92,7 @@ class CommitRoute(Resource):
     @ns.response(200, "Success")
     @ns.response(404, "Commit not found.")
     def get(self, project_id, commit_id):
+        Session = get_session()
         commit = Session.query(Commit) \
             .filter(Commit.project_id == project_id) \
             .filter(Commit.id == commit_id) \

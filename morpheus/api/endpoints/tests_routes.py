@@ -1,6 +1,6 @@
 from flask_restx.resource import Resource
 from morpheus.api.rest import api
-from morpheus.database.db import Session
+from morpheus.database.db import Session, get_session
 from morpheus.database.util import row2dict
 from morpheus.database.models.methods import TestMethod
 from morpheus.api.logic.coverage import ProjectQuery
@@ -39,6 +39,7 @@ class TestMethodsInCommitRoute(Resource):
     @ns.response(200, 'Success')
     @ns.response(404, 'Methods for project for given project id or method id not found.')
     def get(self, project_id):
+        Session = get_session()
         project = ProjectQuery.get_project(Session, project_id)
 
         if project is None:

@@ -1,6 +1,7 @@
 import os
 import logging
 import json
+from pathlib import Path
 from typing import Tuple, List
 from morpheus.analysis.util.subject import AnalysisRepo
 from morpheus.analysis.tools import TacocoRunner
@@ -12,7 +13,7 @@ from os.path import sep, exists
 
 logger = logging.getLogger(__name__)
 
-def run_analysis(url, output_path, current, tags, commits):
+def run_analysis(url, output_path: Path, current, tags, commits):
 
     if not os.path.exists(output_path):
         logger.warning(f'Output path did not exists: {output_path}, so it was created.')
@@ -24,7 +25,8 @@ def run_analysis(url, output_path, current, tags, commits):
         # Add project
         project = Project(project_name=repo.get_project_name())
 
-        project_path = f"{output_path}{sep}{repo.get_project_name()}"
+        project_path = output_path / repo.get_project_name()
+
         if not exists(project_path):
             os.makedirs(project_path)
         with open(f"{project_path}{sep}project.json", 'w') as f:
@@ -62,7 +64,7 @@ def run_analysis(url, output_path, current, tags, commits):
             else:
                 logger.info(f'Output per file: \n\tMethod File: {method_file_path}\n\tTacoco File: {tacoco_file_path}')
 
-def _analysis(repo, tacoco_runner, parser_runner, output_path) -> Tuple[bool, str, str]:
+def _analysis(repo, tacoco_runner, parser_runner, output_path: Path) -> Tuple[bool, str, str]:
     # Before each analysis remove all generated files of previous run
     repo.clean()
 
@@ -82,7 +84,9 @@ def _analysis(repo, tacoco_runner, parser_runner, output_path) -> Tuple[bool, st
     # Combine data
     commit: Commit = repo.get_current_commit()
 
-    with open(f"{output_path}{os.path.sep}{repo.get_project_name()}{sep}{commit.sha}{sep}commit.json", 'w') as f:
+    output_path = output_path / repo.get_project_name() / commit.sha
+
+    with open(output_path / "commits.json", 'w') as f:
             f.write(json.dumps(row2dict(commit)))
 
     logger.info("build successfull...")

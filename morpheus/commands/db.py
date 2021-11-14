@@ -1,11 +1,13 @@
 import logging
 import json
 import os
+from pathlib import Path
 from os.path import isdir, join, sep
 from morpheus.analysis.parser.methods import MethodParser
 from morpheus.analysis.parser.tacoco import TacocoParser
+from morpheus.config import Config
 from morpheus.database.models.repository import Project, Commit
-from morpheus.database.db import Session, engine, init_db
+from morpheus.database.db import create_engine_and_session, init_db
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +18,17 @@ def load_json(path):
     with open(path) as f:
         return json.load(f)
 
-def create_database(input_directory):
+def create_database(input_directory, database_path: Path=None):
+
+    # Update configuration
+    if database_path is not None:
+        Config.DATABASE_PATH = database_path.resolve()
+
+    logger.debug("%s - %s", Config, Config.DATABASE_PATH)
+
     logger.info("Initialize database")
+    (engine, Session) = create_engine_and_session()
+    
     init_db(engine)
 
     # Obtain all projects

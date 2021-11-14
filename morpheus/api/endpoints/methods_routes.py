@@ -1,7 +1,7 @@
 from morpheus.database.models.methods import LineCoverage, ProdMethod, ProdMethodVersion, TestMethod
 from flask_restx.resource import Resource
 from morpheus.api.rest import api
-from morpheus.database.db import Session
+from morpheus.database.db import get_session
 from morpheus.database.util import row2dict
 from morpheus.database.models.repository import Project, Commit
 from morpheus.api.logic.coverage import MethodCoverageQuery, CommitQuery, ProjectQuery
@@ -24,7 +24,7 @@ class SingleMethodRoute(Resource):
     @ns.response(200, 'Success')
     @ns.response(404, 'Method not found.')
     def get(self, method_id):
-
+        Session = get_session()
         method = Session.query(ProdMethod) \
             .filter(ProdMethod.id == method_id)\
             .first()
@@ -40,6 +40,7 @@ class MethodsInProjectRoute(Resource):
     @ns.response(200, 'Success')
     @ns.response(404, 'Methods for project for given project id not found.')
     def get(self, project_id):
+        Session = get_session()
         project = ProjectQuery.get_project(Session, project_id)
 
         if project is None:
@@ -60,6 +61,7 @@ class MethodsInCommitRoute(Resource):
     @ns.response(200, 'Success')
     @ns.response(404, 'Methods for project for given project id or method id not found.')
     def get(self, project_id, commit_id):
+        Session = get_session()
         project = ProjectQuery.get_project(Session, project_id)
 
         if project is None:
