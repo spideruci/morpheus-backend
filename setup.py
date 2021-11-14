@@ -9,7 +9,7 @@ setup(
     packages=['morpheus',],
     license='MIT',
     install_requires = [
-        'pyyaml==5.3.1',
+        'pyyaml==5.4',
         'GitPython==3.1.12',
         'flask==1.1.2',
         'flask-cors==3.0.9',
