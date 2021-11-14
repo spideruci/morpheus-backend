@@ -1,4 +1,4 @@
-# Morpheus Backend
+# Morpheus tools
 
 ## Install
 ```
@@ -29,6 +29,20 @@ options:
 NOTES:
 - Tacoco and parser location are configured in the `.env` file. 
 
-### Analyze
+### analyze
 
-Example command to get the coverage of all tagged commits for jpacman-framework: `matrix analyze https://github.com/SERG-Delft/jpacman-framework.git  ./20211113-results --tags -1`
+Example command to get the coverage of all tagged commits for jpacman-framework: `matrix analyze https://github.com/SERG-Delft/jpacman-framework.git  ./historical-coverage-json --tags -1`
+
+### db
+
+After coverage data has been obtained we can create a database out of all the data to make querying easier: `matrix db ./historical-data-json/ ./jpacman-history.sqlite`
+
+### extract
+
+Turning the database into static json files
+
+`matrix extract ./jpacman-history.sqlite ./history-static/`
+
+### server
+
+`matrix server ./jpacman-history.sqlite --port 8080 --host 127.0.0.1`

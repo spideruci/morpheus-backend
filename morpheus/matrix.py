@@ -41,7 +41,7 @@ def parse_arguments():
     # -------------------------------------------
     db_parser = subparsers.add_parser("db", help="Create database with morpheus coverage data.")
     db_parser.add_argument('input_folder', type=Path, help='Directory of the data.')
-    db_parser.add_argument('-o', '--output', type=Path, help="Database location")
+    db_parser.add_argument('output', type=Path, help="Database location")
 
     db_parser.set_defaults(func=morpheus_create_database)
 
