@@ -1,4 +1,3 @@
-from argparse import ArgumentParser
 import functools
 import logging
 from morpheus.api.endpoints.project_routes import ProjectsRoute, CommitsRoute
@@ -9,20 +8,12 @@ from morpheus.database.db import engine, init_db
 from functools import wraps
 from time import time
 import json
-from enum import Enum
 from pathlib import Path
 from morpheus.database.models.repository import Commit
 from multiprocessing import Pool, cpu_count
 import os
 
 logger = logging.getLogger(__name__)
-
-def init_logger(logging_level=logging.DEBUG):
-    logging.basicConfig(
-        level=logging_level,
-        format='[%(levelname)s] %(asctime)s: %(message)s',
-        datefmt='%H:%M:%S'
-    )
 
 def timeit(f):
     @wraps(f)
@@ -118,25 +109,15 @@ def store(directory: Path, object_id, content):
     with open(file_path, 'w+') as f:
         json.dump(content, f)
 
-def parse_arguments():
-    parser = ArgumentParser(description='Create morpheus database')
 
-    parser.add_argument('output', type=str, help='Output directory.')
-
-    return parser.parse_args()
-
-
-def main():
-    init_logger()
+def extract_coverage(output_path):
     init_db(engine)
-
-    args = parse_arguments()
 
     project_route = ProjectsRoute()
 
     (projects_response, _) = project_route.get()
 
-    root_dir = Path(args.output)
+    root_dir = Path(output_path)
 
     if not os.path.exists(root_dir):
         os.makedirs(root_dir)
@@ -152,6 +133,3 @@ def main():
         for f in collectors:
             project_ids = map(lambda p : p.get('id'), projects)
             p.map(functools.partial(f, base_dir=root_dir), project_ids)
-
-if __name__ == '__main__':
-    main()

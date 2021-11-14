@@ -2,3 +2,6 @@
 __pycache__/
 results/
 venv/
+.tox/
+.eggs/
+build/

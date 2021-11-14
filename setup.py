@@ -22,10 +22,7 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
-            'morpheus=morpheus.backend_cli:main',
-            'trinity=morpheus.analysis_cli:main',
-            'neo=morpheus.create_db_cli:main',
-            'create_morpheus_json=morpheus.create_morpheus_json:main'
+            'matrix=morpheus.matrix:main',
         ]
     }
 )

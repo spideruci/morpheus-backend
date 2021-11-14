@@ -1,7 +1,6 @@
 import logging
 import json
 import os
-from argparse import ArgumentParser
 from os.path import isdir, join, sep
 from morpheus.analysis.parser.methods import MethodParser
 from morpheus.analysis.parser.tacoco import TacocoParser
@@ -10,20 +9,6 @@ from morpheus.database.db import Session, engine, init_db
 
 logger = logging.getLogger(__name__)
 
-def init_logger(logging_level=logging.DEBUG):
-    logging.basicConfig(
-        level=logging_level,
-        format='[%(levelname)s] %(asctime)s: %(message)s',
-        datefmt='%H:%M:%S'
-    )
-
-def parse_arguments():
-    parser = ArgumentParser(description='Create morpheus database')
-
-    parser.add_argument('input_folder', type=str, help='Directory of the data.')
-    
-    return parser.parse_args()
-
 def get_directories(root_path):
     return [project for project in os.listdir(root_path) if isdir(join(root_path, project))]
 
@@ -31,13 +16,7 @@ def load_json(path):
     with open(path) as f:
         return json.load(f)
 
-def main():
-    init_logger()
-
-    arguments = parse_arguments()
-    
-    input_directory = arguments.input_folder
-
+def create_database(input_directory):
     logger.info("Initialize database")
     init_db(engine)
 
