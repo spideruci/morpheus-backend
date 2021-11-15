@@ -22,7 +22,7 @@ def timeit(f):
         result = f(*args, **kw)
         time_end = time()
         diff = time_end - time_start
-        print(f'func:{f.__name__}: {diff} sec')
+        logger.debug("func:%s: %s sec", f.__name__, diff)
         return result
     return wrap
 
@@ -47,7 +47,7 @@ def get_commit_coverage(project_id: int, base_dir: Path):
 
         (coverage_response, status) = coverage.get(project_id, commit_id)        
         if status != 200:
-            print(f"[ERROR] {coverage_response} {status}")
+            logger.error("code:%s msg:%s", status,  coverage_response)
 
         store(commit_coverage_dir, f'{commit_id}.json',coverage_response)
 
@@ -72,7 +72,7 @@ def get_method_coverage(project_id: int, base_dir: Path):
 
         (coverage_response, status) = coverage.get(project_id, method_id)        
         if status != 200:
-            print(f"[ERROR] {coverage_response} {status}")
+            logger.error("code:%s msg:%s", status,  coverage_response)
 
         store(method_coverage_dir, f'{method_id}.json', coverage_response)
 
@@ -100,7 +100,7 @@ def get_test_coverage(project_id: int, base_dir: Path):
 
         (coverage_response, status) = coverage.get(project_id, test_id)        
         if status != 200:
-            print(f"[ERROR] {coverage_response} {status}")
+            logger.error("code:%s msg:%s", status,  coverage_response)
 
         store(test_coverage_dir, f'{test_id}.json', coverage_response)
 

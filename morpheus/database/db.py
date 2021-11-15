@@ -17,7 +17,7 @@ def get_engine():
 def create_engine_and_session():
     global engine 
     global Session
-    print(f"{Config.SQLALCHEMY_DATABASE_TYPE}{Config.DATABASE_PATH}")
+
     engine = create_engine(f"{Config.SQLALCHEMY_DATABASE_TYPE}{Config.DATABASE_PATH}")
     Session = scoped_session(sessionmaker(bind=engine))
 
