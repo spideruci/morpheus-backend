@@ -78,7 +78,7 @@ def create_database(input_directory, database_path: Path=None):
             # ToDo: Split parsing and storing into separate parts, if coverage doesn't exist, don't store the commit.
 
             # Store Commit
-            commit_json = load_json(commit_path / 'commit.json')
+            commit_json = load_json(commit_path / 'commits.json')
             commit = Commit(**commit_json, project_id=project.id)
 
             if Session.query(Project).filter(Project.project_name==project_name).first() is None:

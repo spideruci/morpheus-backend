@@ -25,9 +25,10 @@ class MethodParserRunner():
         # Obtain commit sha
         commit: Commit = self.__repo.get_current_commit()
 
+        path = self.file_output_dir / commit.sha / "methods.json"
         # Run analysis
         run_method_parser_cmd = f"""
-        ./gradlew method-parser:run --args="--sut {self.project_path} --outputPath {self.file_output_dir}{os.path.sep}{commit.sha}{os.path.sep}methods.json"
+        ./gradlew method-parser:run --args="--sut {self.project_path} --outputPath {path.resolve()}"
         """
 
         p = Popen(run_method_parser_cmd, cwd=self.history_slicer_path, shell=True)

@@ -18,7 +18,8 @@ setup(
         'python-dotenv==0.15.0'
     ],
     tests_require = [
-        'pytest'
+        'pytest',
+        'tox'
     ],
     entry_points = {
         'console_scripts': [
@@ -26,4 +27,3 @@ setup(
         ]
     }
 )
-

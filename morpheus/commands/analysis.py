@@ -64,7 +64,7 @@ def run_analysis(url, output_path: Path, current, tags, commits):
             else:
                 logger.info(f'Output per file: \n\tMethod File: {method_file_path}\n\tTacoco File: {tacoco_file_path}')
 
-def _analysis(repo, tacoco_runner, parser_runner, output_path: Path) -> Tuple[bool, str, str]:
+def _analysis(repo: AnalysisRepo, tacoco_runner: TacocoRunner, parser_runner: MethodParserRunner, output_path: Path) -> Tuple[bool, str, str]:
     # Before each analysis remove all generated files of previous run
     repo.clean()
 
@@ -74,7 +74,7 @@ def _analysis(repo, tacoco_runner, parser_runner, output_path: Path) -> Tuple[bo
             .compile() \
             .test_compile()
     except Exception as e:
-        logger.error("build failure...")
+        logger.error("%s", e)
         return (False, None, None)
 
     # Start analysis

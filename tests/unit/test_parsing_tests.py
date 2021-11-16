@@ -43,7 +43,6 @@ class TestParsingVintageTestMethods(unittest.TestCase):
         assert method_name == "testHandleStartDirectoryFalse"
         assert is_passing
 
-
 class TestParsingJupiterTestMethods(unittest.TestCase):
 
     regular_test_string = "testMagicNumberFileFilterStringOffset().[engine:junit-jupiter]/[class:org.apache.commons.io.filefilter.FileFilterTestCase]/[method:testMagicNumberFileFilterStringOffset()]"
@@ -164,9 +163,28 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
         assert method_name == "testDataIntegrityWithBufferedReader%5Btest-file-utf8-win-linebr.bin, charset\u003dUTF-8%5D[%5Btest-file-utf8-win-linebr.bin, charset\u003dUTF-8%5D%5B0%5D]"
         assert is_passing
 
+    def test_parsing_commons_lang_test_factory_testcase(self):
+        test_string = "IllegalArgumentException.[engine:junit-jupiter]/[class:org.apache.commons.lang3.StreamsTest]/[test-factory:simpleStreamFilterFailing()]/[dynamic-test:#1]"
+
+        package, class_name, method_name, is_passing = parse_tacoco_test_string(test_string)
+
+        assert package == "org.apache.commons.lang3"
+        assert class_name == "StreamsTest"
+        assert method_name == "simpleStreamFilterFailing[1]"
+        assert is_passing
+
+    def test_parsing_commons_lang_nested_class_testcase(self):
+        test_string = "shouldNotThrowExceptionWhenValueIsInstanceOfClass().[engine:junit-jupiter]/[class:org.apache.commons.lang3.ValidateTest]/[nested-class:IsInstanceOf]/[nested-class:WithMessageTemplate]/[method:shouldNotThrowExceptionWhenValueIsInstanceOfClass()]"
+
+        package, class_name, method_name, is_passing = parse_tacoco_test_string(test_string)
+
+        assert package == "org.apache.commons.lang3"
+        assert class_name == "ValidateTest[IsInstanceOf[WithMessageTemplate]]"
+        assert method_name == "shouldNotThrowExceptionWhenValueIsInstanceOfClass"
+        assert is_passing
+
 class TestCucumberTest(unittest.TestCase):
     regular_test_string = "When the user presses the \"Start\" button.[engine:junit-vintage]/[runner:nl.tudelft.jpacman.e2e.framework.startup.StartupTest]/[test:rO0ABXNyAB9naGVya2luLmZvcm1hdHRlci5tb2RlbC5GZWF0dXJlAAAAAAAAAAECAAB4cgAkZ2hlcmtpbi5mb3JtYXR0ZXIubW9kZWwuVGFnU3RhdGVtZW50AAAAAAAAAAECAAJMAAJpZHQAEkxqYXZhL2xhbmcvU3RyaW5nO0wABHRhZ3N0ABBMamF2YS91dGlsL0xpc3Q7eHIAKmdoZXJraW4uZm9ybWF0dGVyLm1vZGVsLkRlc2NyaWJlZFN0YXRlbWVudInoQ7yJkLCFAgABTAALZGVzY3JpcHRpb25xAH4AAnhyACZnaGVya2luLmZvcm1hdHRlci5tb2RlbC5CYXNpY1N0YXRlbWVudPM3wIsDVBUvAgAETAAIY29tbWVudHNxAH4AA0wAB2tleXdvcmRxAH4AAkwABGxpbmV0ABNMamF2YS9sYW5nL0ludGVnZXI7TAAEbmFtZXEAfgACeHIAGmdoZXJraW4uZm9ybWF0dGVyLk1hcHBhYmxl42CLFPnowjUCAAB4cHNyABNqYXZhLnV0aWwuQXJyYXlMaXN0eIHSHZnHYZ0DAAFJAARzaXpleHAAAAAAdwQAAAAAeHQAB0ZlYXR1cmVzcgARamF2YS5sYW5nLkludGVnZXIS4qCk94GHOAIAAUkABXZhbHVleHIAEGphdmEubGFuZy5OdW1iZXKGrJUdC5TgiwIAAHhwAAAAAnQADVN0YXJ0IHRvIHBsYXl0AEBBcyBhIHBsYXllcgpJIHdhbnQgdG8gc3RhcnQgdGhlIGdhbWUKc28gdGhhdCBJIGNhbiBhY3R1YWxseSBwbGF5dAANc3RhcnQtdG8tcGxheXNxAH4ACQAAAAJ3BAAAAAJzcgAbZ2hlcmtpbi5mb3JtYXR0ZXIubW9kZWwuVGFnAAAAAAAAAAECAAJMAARsaW5lcQB%2BAAZMAARuYW1lcQB%2BAAJ4cQB%2BAAdzcQB%2BAAwAAAABdAADQFMxc3EAfgATcQB%2BABV0AApAZnJhbWV3b3JreA\u003d\u003d]/[test:rO0ABXNyACBnaGVya2luLmZvcm1hdHRlci5tb2RlbC5TY2VuYXJpbwAAAAAAAAABAgABTAAEdHlwZXQAEkxqYXZhL2xhbmcvU3RyaW5nO3hyACRnaGVya2luLmZvcm1hdHRlci5tb2RlbC5UYWdTdGF0ZW1lbnQAAAAAAAAAAQIAAkwAAmlkcQB%2BAAFMAAR0YWdzdAAQTGphdmEvdXRpbC9MaXN0O3hyACpnaGVya2luLmZvcm1hdHRlci5tb2RlbC5EZXNjcmliZWRTdGF0ZW1lbnSJ6EO8iZCwhQIAAUwAC2Rlc2NyaXB0aW9ucQB%2BAAF4cgAmZ2hlcmtpbi5mb3JtYXR0ZXIubW9kZWwuQmFzaWNTdGF0ZW1lbnTzN8CLA1QVLwIABEwACGNvbW1lbnRzcQB%2BAANMAAdrZXl3b3JkcQB%2BAAFMAARsaW5ldAATTGphdmEvbGFuZy9JbnRlZ2VyO0wABG5hbWVxAH4AAXhyABpnaGVya2luLmZvcm1hdHRlci5NYXBwYWJsZeNgixT56MI1AgAAeHBzcgATamF2YS51dGlsLkFycmF5TGlzdHiB0h2Zx2GdAwABSQAEc2l6ZXhwAAAAAHcEAAAAAHh0AAhTY2VuYXJpb3NyABFqYXZhLmxhbmcuSW50ZWdlchLioKT3gYc4AgABSQAFdmFsdWV4cgAQamF2YS5sYW5nLk51bWJlcoaslR0LlOCLAgAAeHAAAAAIdAASUHJlc3Mgc3RhcnQgYnV0dG9udAAAdAAgc3RhcnQtdG8tcGxheTtwcmVzcy1zdGFydC1idXR0b25zcQB%2BAAkAAAABdwQAAAABc3IAG2doZXJraW4uZm9ybWF0dGVyLm1vZGVsLlRhZwAAAAAAAAABAgACTAAEbGluZXEAfgAGTAAEbmFtZXEAfgABeHEAfgAHc3EAfgAMAAAAB3QABUBTMS4xeHQACHNjZW5hcmlv]/[test:rO0ABXNyABxnaGVya2luLmZvcm1hdHRlci5tb2RlbC5TdGVwAAAAAAAAAAECAAJMAApkb2Nfc3RyaW5ndAAjTGdoZXJraW4vZm9ybWF0dGVyL21vZGVsL0RvY1N0cmluZztMAARyb3dzdAAQTGphdmEvdXRpbC9MaXN0O3hyACZnaGVya2luLmZvcm1hdHRlci5tb2RlbC5CYXNpY1N0YXRlbWVudPM3wIsDVBUvAgAETAAIY29tbWVudHNxAH4AAkwAB2tleXdvcmR0ABJMamF2YS9sYW5nL1N0cmluZztMAARsaW5ldAATTGphdmEvbGFuZy9JbnRlZ2VyO0wABG5hbWVxAH4ABHhyABpnaGVya2luLmZvcm1hdHRlci5NYXBwYWJsZeNgixT56MI1AgAAeHBzcgATamF2YS51dGlsLkFycmF5TGlzdHiB0h2Zx2GdAwABSQAEc2l6ZXhwAAAAAHcEAAAAAHh0AAVXaGVuIHNyABFqYXZhLmxhbmcuSW50ZWdlchLioKT3gYc4AgABSQAFdmFsdWV4cgAQamF2YS5sYW5nLk51bWJlcoaslR0LlOCLAgAAeHAAAAAKdAAjdGhlIHVzZXIgcHJlc3NlcyB0aGUgIlN0YXJ0IiBidXR0b25wcA\u003d\u003d]"
-
 
     def test_parsing_test_case_runtime(self):
         # Given a test case

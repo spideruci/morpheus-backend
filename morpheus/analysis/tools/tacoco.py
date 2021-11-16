@@ -3,8 +3,9 @@ Script for running tacoco on a project
 """
 import os
 import logging
-from subprocess import Popen
+import subprocess
 from pathlib import Path
+from typing import List
 from morpheus.analysis.util.subject import AnalysisRepo
 from morpheus.database.models.repository import Commit
 
@@ -20,51 +21,74 @@ class TacocoRunner():
         self.file_output_dir = output_dir / self.project_name
 
     def install(self):
-        logger.info("[TACOCO] start builder on: %s", self.project_path)
+        logger.info("[TACOCO] Phase: install on: %s", self.project_path)
 
         cmd = [f"mvn install"]
-        success = self.__run_command(cmd)
+        ret = self.__run_command(cmd)
 
-        if success == 1:
+        if ret == 1:
             raise Exception("'mvn install' failed...")
 
         return self
 
+    def __get_logfile(self, commit):
+        log_path =  (self.file_output_dir / self.__repo.get_current_commit().sha / "tacoco_run.log").resolve()
+
+        os.makedirs((self.file_output_dir / self.__repo.get_current_commit().sha).resolve(), exist_ok=True)
+        return open(log_path, "a")
+
     def compile(self):
-        logger.info("[TACOCO] start builder on: %s", self.project_path)
+        logger.info("[TACOCO] Phase: compile: %s", self.project_path)
 
-        cmd = [f"mvn compile"]
-        success = self.__run_command(cmd)
+        cmd = ["mvn compile"]
 
-        if success == 1:
+        ret = self.__run_command(cmd)
+
+        if ret == 1:
+            logger.warn("Comipile with java 1.8...")
+            cmd = ["mvn compile -Dmaven.compiler.target=1.8 -Dmaven.compiler.source=1.8"]
+            ret = self.__run_command(cmd)
+
+        if ret == 1:
+            logger.error("RET %s", ret)
             raise Exception("'mvn compile' failed...")
 
         return self
 
     def test_compile(self):
-        logger.info("[TACOCO] start builder on: %s", self.project_path)
+        logger.info("[TACOCO] Phase: test compile: %s", self.project_path)
 
         cmd = [f"mvn test-compile"]
-        success = self.__run_command(cmd)
 
-        if success == 1:
+        ret = self.__run_command(cmd)
+
+        if ret == 1:
+            logger.warn("compile with java 1.8...")
+            cmd = ["mvn test-compile -Dmaven.compiler.target=1.8 -Dmaven.compiler.source=1.8"]
+            ret = self.__run_command(cmd)
+
+        if ret == 1:
+            logger.error("RET test-compile %s", ret)
             raise Exception("'mvn test-compile' failed...")
 
         return self
 
     def __run_command(self, cmd):
-        logger.info("[TACOCO] Run command on: %s", self.project_path)
+        commit = self.__repo.get_current_commit()
 
-        # If tacoco was already run before it places a classpath in the root directory
-        # which causes problems for a rerun for some checks (apache-rat-plugin).
-        p = Popen(["rm", "tacoco.cp"], cwd=self.project_path)
-        p.wait()
-        my_env = os.environ.copy()
+        # Store all logs per project per commit
+        with self.__get_logfile(commit.sha) as log_file:
+            # If tacoco was already run before it places a classpath in the root directory
+            # which causes problems for a rerun for some checks (apache-rat-plugin).
+            rm_tacoco_cp_cmd: List[str] = ["rm", "tacoco.cp"]
 
-        logger.debug("[TACOCO] command run: %s", cmd)
-        p = Popen(cmd, cwd=self.project_path, shell=True, env=my_env)
+            my_env = os.environ.copy()
+            # subprocess.run(rm_tacoco_cp_cmd, shell=True, cwd=self.project_path)
 
-        return p.wait()
+            logger.debug("[TACOCO] command run: %s", cmd)
+            result = subprocess.run(cmd, stdout=log_file, stderr=log_file, env=my_env, shell=True, cwd=self.project_path)
+
+        return result.returncode
 
     def run(self):
         if self.__run_tacoco_coverage() != 0:
@@ -102,11 +126,13 @@ class TacocoRunner():
         if debug:
             run_tacoco_coverage_cmd += " -Dtacoco.debug"
 
-        p = Popen(run_tacoco_coverage_cmd, cwd=self.tacoco_path, shell=True)
-        return p.wait()
+        # Store all logs per project per commit
+        with self.__get_logfile(commit.sha) as log_file:
+            result = subprocess.run(run_tacoco_coverage_cmd, cwd=self.tacoco_path, stderr=log_file, stdout=log_file, shell=True)
+        return result.returncode
 
     def __run_tacoco_analysis(self):
-        logging.info("[TACOCO] start analysis for: %s", self.project_path)
+        logging.info("[TACOCO] analyze coverage file: %s", self.project_path)
 
         # Obtain commit sha
         commit: Commit = self.__repo.get_current_commit()
@@ -125,11 +151,13 @@ class TacocoRunner():
             -Dtacoco.json={coverage_json_path}
         """
 
-        p = Popen(run_tacoco_analysis_cmd, cwd=self.tacoco_path, shell=True)
-        return p.wait()
+        # Store all logs per project per commit
+        with self.__get_logfile(commit.sha) as log_file:
+            result = subprocess.run(run_tacoco_analysis_cmd, cwd=self.tacoco_path, stderr=log_file, stdout=log_file, shell=True)
+        return result.returncode
 
     def __run_tacoco_reader(self):
-        logging.info("[TACOCO] start reader for: %s", self.project_path)
+        logging.info("[TACOCO] convert coverage to json: %s", self.project_path)
 
         commit: Commit = self.__repo.get_current_commit()
 
@@ -141,6 +169,7 @@ class TacocoRunner():
             -Dtacoco.json={coverage_json_path}
         """
 
-        p = Popen(run_tacoco_reader_cmd, cwd=self.tacoco_path, shell=True)
-
-        return p.wait()
+        # Store all logs per project per commit
+        with self.__get_logfile(commit.sha) as log_file:
+            result = subprocess.run(run_tacoco_reader_cmd, cwd=self.tacoco_path, stderr=log_file, stdout=log_file, shell=True)
+        return result.returncode

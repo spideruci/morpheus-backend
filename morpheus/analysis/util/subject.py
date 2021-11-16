@@ -76,7 +76,7 @@ class AnalysisRepo(object):
             git.checkout(tag)
             yield self.get_current_commit()
 
-            if max_commits == i:
+            if i >= max_commits -1 and max_commits != -1:
                 break
 
     def iterate_commits(self, max_commits=-1) -> Tag:

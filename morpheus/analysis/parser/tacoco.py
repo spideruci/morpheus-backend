@@ -129,7 +129,7 @@ class TacocoParser():
                             ProdMethodVersion.commit_id == commid_id,
                             ProdMethodVersion.file_path.contains(full_name),
                             ProdMethodVersion.line_start <= line_number,
-                            ProdMethodVersion.line_end >= line.line_number,
+                            ProdMethodVersion.line_end >= line_number,
                         )
                     ).first()
 
@@ -150,7 +150,7 @@ class TacocoParser():
 
                 (line.method_version_id, ) = result
 
-                # if line.commit_id == 2 and line.test_id == 2599 and line.method_version_id==1760  and line.line_number == 173:
+                # if line.commit_id == 1 and line.test_id == 1377 and line.method_version_id==482  and line.line_number == 1275:
                 #     logger.debug("Test: %s, %s, %s, %s", test.id, test.method_name, test.class_name, test.package_name)
                 
                 session.add(line)

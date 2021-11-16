@@ -39,18 +39,29 @@ def parse_tacoco_test_string(test_string: str):
 
 def __parse_package_name(engine, test_method):
     path = ''
+    nested = None
     match engine:
         case TestEngine.JUPITER:
             path = re.search(r'class:([\w\._()$]+)', test_method).group(1)
             if path is None:
                 path = re.search(r'runner:([\w\._()$]+)', test_method).group(1)
+
+            if (result := re.findall(r'nested-class:([\w_]+)', test_method)):
+                nested = [f'[{a}' for a in result]
+                nested.extend([']'] * len(result))
+                nested = ''.join(nested)
+
         case TestEngine.VINTAGE:
             path = re.search(r'runner:([\w\._()$]+)', test_method).group(1)
         case TestEngine.NOENGINE:
             path = re.search(r'[\w\_]+\(([\w\.]+)\)', test_method).group(1)
     
     split_path = path.split('.')
-    class_name = split_path[-1]
+
+    if nested is None:
+        class_name = split_path[-1]
+    else:
+        class_name = f"{split_path[-1]}{nested}"
     package_name = '.'.join(split_path[0:len(split_path)-1])
     return package_name, class_name
 
@@ -67,6 +78,11 @@ def __parse_method_name(engine, test_method):
             elif (result := re.search(r'test-template:([\w%=,\-\.,\s\\]+)\([\w\s\-,.$]*\)', test_method)) is not None:
                 method_name = result.group(1)
                 invocation_number = re.search(r'test-template-invocation:#([0-9]+)', test_method).group(1)
+                return f'{method_name}[{invocation_number}]'
+
+            elif (result := re.search(r'test-factory:([\w%=,\-\.,\s\\]+)\([\w\s\-,.$]*\)', test_method)) is not None:
+                method_name = result.group(1)
+                invocation_number = re.search(r'dynamic-test:#([0-9]+)', test_method).group(1)
                 return f'{method_name}[{invocation_number}]'
 
         case TestEngine.VINTAGE:
