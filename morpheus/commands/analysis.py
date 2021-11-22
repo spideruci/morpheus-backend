@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Tuple, List
 from morpheus.analysis.util.subject import AnalysisRepo
-from morpheus.analysis.tools import TacocoRunner
+from morpheus.analysis.tools import TacocoRunner, tacoco
 from morpheus.analysis.tools import MethodParserRunner
 from morpheus.database.models import Commit, Project
 from morpheus.config import Config
@@ -13,7 +13,7 @@ from os.path import sep, exists
 
 logger = logging.getLogger(__name__)
 
-def run_analysis(url, output_path: Path, current, tags, commits):
+def run_analysis(url, output_path: Path, current, tags, commits, add_install=False):
 
     if not os.path.exists(output_path):
         logger.warning(f'Output path did not exists: {output_path}, so it was created.')
@@ -56,7 +56,7 @@ def run_analysis(url, output_path: Path, current, tags, commits):
             logger.info("[INFO] Analyze commit: %s", commit.sha)
 
             # Run analysis and return paths to output files
-            success, method_file_path, tacoco_file_path = _analysis(repo, tacoco_runner, parser_runner, output_path)
+            success, method_file_path, tacoco_file_path = _analysis(repo, tacoco_runner, parser_runner, output_path, add_install)
             
             if not success:
                 logger.error('Analysis for %s failed...', commit.sha)
@@ -64,15 +64,21 @@ def run_analysis(url, output_path: Path, current, tags, commits):
             else:
                 logger.info(f'Output per file: \n\tMethod File: {method_file_path}\n\tTacoco File: {tacoco_file_path}')
 
-def _analysis(repo: AnalysisRepo, tacoco_runner: TacocoRunner, parser_runner: MethodParserRunner, output_path: Path) -> Tuple[bool, str, str]:
+def _analysis(repo: AnalysisRepo, tacoco_runner: TacocoRunner, parser_runner: MethodParserRunner, output_path: Path, add_install: bool) -> Tuple[bool, str, str]:
     # Before each analysis remove all generated files of previous run
     repo.clean()
 
     # Try compiling the project
     try:
-        tacoco_runner \
-            .compile() \
-            .test_compile()
+        if not add_install:
+            tacoco_runner \
+                .compile() \
+                .test_compile()
+        else:
+            tacoco_runner \
+                .install() \
+                .compile() \
+                .test_compile()
     except Exception as e:
         logger.error("%s", e)
         return (False, None, None)

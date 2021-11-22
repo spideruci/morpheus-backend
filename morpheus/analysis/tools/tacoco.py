@@ -2,6 +2,7 @@
 Script for running tacoco on a project
 """
 import os
+import re
 import logging
 import subprocess
 from pathlib import Path
@@ -12,6 +13,7 @@ from morpheus.database.models.repository import Commit
 logger = logging.getLogger(__name__)
 
 class TacocoRunner():
+    mvn_cmd = "mvn --fail-fast"
 
     def __init__(self, repo: AnalysisRepo, output_dir: Path, tacoco_path: str, jdk: str = "13"):
         self.__repo = repo
@@ -20,13 +22,34 @@ class TacocoRunner():
         self.project_name = self.__repo.get_project_name()
         self.file_output_dir = output_dir / self.project_name
 
+    def __update_pom_file(self, pom_file_path):
+        logger.debug("Changing source/target in maven pom file making it (hopefully) possible to compile.")
+        pom_file = ""
+        with open(pom_file_path.resolve(), 'r') as f:
+            pom_file = f.read()
+
+            pom_file = re.sub(r'<source>.+</source>', "<source>1.8</source>", pom_file)
+            pom_file = re.sub(r'<target>.+</target>', "<target>1.8</target>", pom_file)
+
+        with open(pom_file_path.resolve(), 'w') as f:
+            f.write(pom_file)
+
     def install(self):
         logger.info("[TACOCO] Phase: install on: %s", self.project_path)
 
-        cmd = [f"mvn install"]
+        cmd = [f"{self.mvn_cmd} clean install -Dmaven.javadoc.skip=true"]
         ret = self.__run_command(cmd)
 
         if ret == 1:
+            logger.warn("Compile with java 1.8...")
+            pom_file_path = Path(self.project_path) / "pom.xml"
+            self.__update_pom_file(pom_file_path)
+
+            cmd = [f"{self.mvn_cmd} clean install -Dmaven.javadoc.skip=true"]
+            ret = self.__run_command(cmd)
+
+        if ret == 1:
+            logger.error("RET %s", ret)
             raise Exception("'mvn install' failed...")
 
         return self
@@ -40,13 +63,17 @@ class TacocoRunner():
     def compile(self):
         logger.info("[TACOCO] Phase: compile: %s", self.project_path)
 
-        cmd = ["mvn compile"]
+        cmd = [f"{self.mvn_cmd} compile"]
 
         ret = self.__run_command(cmd)
 
         if ret == 1:
-            logger.warn("Comipile with java 1.8...")
-            cmd = ["mvn compile -Dmaven.compiler.target=1.8 -Dmaven.compiler.source=1.8"]
+            logger.warn("Compile with java 1.8...")
+
+            pom_file_path = Path(self.project_path) / "pom.xml"
+            self.__update_pom_file(pom_file_path)
+
+            cmd = [f"{self.mvn_cmd} compile"]
             ret = self.__run_command(cmd)
 
         if ret == 1:
@@ -58,13 +85,17 @@ class TacocoRunner():
     def test_compile(self):
         logger.info("[TACOCO] Phase: test compile: %s", self.project_path)
 
-        cmd = [f"mvn test-compile"]
+        cmd = [f"{self.mvn_cmd} test-compile"]
 
         ret = self.__run_command(cmd)
 
         if ret == 1:
-            logger.warn("compile with java 1.8...")
-            cmd = ["mvn test-compile -Dmaven.compiler.target=1.8 -Dmaven.compiler.source=1.8"]
+            logger.warn("Test-compile with java 1.8...")
+
+            pom_file_path = Path(self.project_path) / "pom.xml"
+            self.__update_pom_file(pom_file_path)
+
+            cmd = [f"{self.mvn_cmd} test-compile"]
             ret = self.__run_command(cmd)
 
         if ret == 1:

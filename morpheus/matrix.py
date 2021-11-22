@@ -28,6 +28,7 @@ def parse_arguments():
     analysis_parser = subparsers.add_parser("analyze", help="Obtain historical coverage data from repository.")
     analysis_parser.add_argument('url', type=str, help="URL or path to repository of system-under-test.")
     analysis_parser.add_argument('output', type=Path, help="Path to output directory")
+    analysis_parser.add_argument('--add-install', action='store_true', help="The 'guava' flag, because it needs to be installed first.")
 
     commit_selection_group = analysis_parser.add_mutually_exclusive_group(required=True)
     commit_selection_group.add_argument('--current', action='store_true', help="Run the analysis on current version of the code")
@@ -52,7 +53,7 @@ def parse_arguments():
     server_parser.add_argument('database', type=Path, help="path to database")
     server_parser.add_argument('--host', type=ip_address, default=IPv4Address('127.0.0.1'), help='Port of the tool')
     server_parser.add_argument('-p', '--port', type=int, default=8080, help='Port of the tool')
-    server_parser.add_argument('-d', '--debug', action='store_true', help='Port of the tool')
+    server_parser.add_argument('-d', '--debug', action='store_true', help='Turn on flask debugging features.')
     server_parser.set_defaults(func=morpheus_start_backend)
 
     # -------------------------------------------
@@ -70,7 +71,7 @@ def parse_arguments():
 # -------------------------------------------
 def morpheus_analysis(args):
     try:
-        run_analysis(args.url, args.output, args.current, args.tags, args.commits)
+        run_analysis(args.url, args.output, args.current, args.tags, args.commits, args.add_install)
     except RuntimeError as e:
         logger.error("%s", e)
 

@@ -42,6 +42,14 @@ class AnalysisRepo(object):
         p = Popen(["git", "clean", "-fxd"], cwd=self.target_dir)
         return p.wait()
 
+    def checkout(self, commit):
+        git: Git = self.repo.git
+
+        # Before checking out a new commit, make sure the repo is clean
+        self.clean()
+
+        git.checkout(commit, "--force")
+
     def close(self):
         self.repo.close()
 
@@ -70,10 +78,9 @@ class AnalysisRepo(object):
             return project_name
 
     def iterate_tagged_commits(self, max_commits=-1) -> Tag:
-        git: Git = self.repo.git
 
         for i, tag in enumerate(reversed(self.repo.tags)):
-            git.checkout(tag)
+            self.checkout(tag)
             yield self.get_current_commit()
 
             if i >= max_commits -1 and max_commits != -1:
@@ -83,10 +90,8 @@ class AnalysisRepo(object):
         """
         yield current commit, however iterate only through master branch.
         """
-        git: Git = self.repo.git
-
         for i, commit in enumerate(self.repo.iter_commits('master')):
-            git.checkout(commit)
+            self.checkout(commit)
             yield self.get_current_commit()
 
             if max_commits == i:

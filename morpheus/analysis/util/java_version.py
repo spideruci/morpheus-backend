@@ -6,4 +6,4 @@ class JavaVersion(Enum):
     J10 = 10
     J11 = 11
     J12 = 12
-    J12 = 13
+    J13 = 13

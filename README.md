@@ -46,3 +46,13 @@ Turning the database into static json files
 ### server
 
 `matrix server ./jpacman-history.sqlite --port 8080 --host 127.0.0.1`
+
+
+
+## ToDo:
+- Automaticaly remove unnecessary files:
+  - coverage.{json,exec,err,log}
+- What steps do we need to compile/test-compile project
+  - most projects: compile -> test-compile
+  - Guava: install needs to be performed?
+    - Add flag to do install first?
