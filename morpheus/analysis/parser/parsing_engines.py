@@ -86,16 +86,15 @@ def __parse_method_name(engine, test_method):
                 return f'{method_name}[{invocation_number}]'
 
         case TestEngine.VINTAGE:
-            # results = re.search(r'test:([\w%=,\-\.,\s\\]+\([\w\s,.$]*\))', test_method)
             results = re.findall(r'(test:)', test_method)
             match len(results):
                 case 1:
-                    result = re.search(r'test:([\w%=,\-\.,\s\\]+)\([\w\s,.$]*\)', test_method)
+                    result = re.search(r'test:([\w%=,\-\.,\s\\;]+)\([\w\s,.$]*\)', test_method)
                     return result.group(1)
                 case 2:
                     # Paramterized test
-                    result_p1 = re.search(r'test:([\w%=,\-\.,\s\\]+)\([\w\s,.$]*\)', test_method).group(1)
-                    result_p2 = re.search(r'test:([\w%=,\-\.,\s\\]+)', test_method).group(1)
+                    result_p1 = re.search(r'test:([\w%=,\-\.,\s\\;]+)\([\w\s,.$]*\)', test_method).group(1)
+                    result_p2 = re.search(r'test:([\w%=,\-\.,\s\\\;]+)', test_method).group(1)
                     return f"{result_p1}[{result_p2}]"
                 case _:
                     return test_method.split('.')[0]
