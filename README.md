@@ -27,7 +27,7 @@ options:
 ```
 
 NOTES:
-- Tacoco and parser location are configured in the `.env` file. 
+- Location of analysis tools, [Tacoco](https://github.com/spideruci/tacoco/) and [java method parser](https://github.com/kajdreef/java-method-parser), are configured in the `.env` file.
 
 ### analyze
 
@@ -35,17 +35,19 @@ Example command to get the coverage of all tagged commits for jpacman-framework:
 
 ### db
 
-After coverage data has been obtained we can create a database out of all the data to make querying easier: `matrix db ./historical-data-json/ ./jpacman-history.sqlite`
+After coverage data has been obtained we can create a database out of all the data to make querying easier:
+- `matrix db --all ./historical-data-json/ ./history.sqlite`
+- `matrix db --project ./historical-data-json/jpacman-framework/ ./history-jpacman-framework.sqlite`
 
 ### extract
 
 Turning the database into static json files
 
-`matrix extract ./jpacman-history.sqlite ./history-static/`
+`matrix extract ./history-jpacman-framework.sqlite ./history-static/`
 
 ### server
 
-`matrix server ./jpacman-history.sqlite --port 8080 --host 127.0.0.1`
+`matrix server ./history-jpacman-framework.sqlite --port 8080 --host 127.0.0.1`
 
 
 
@@ -56,3 +58,6 @@ Turning the database into static json files
   - most projects: compile -> test-compile
   - Guava: install needs to be performed?
     - Add flag to do install first?
+- Catch when unique methods/tests occur, rollback what has been inserted and stop program
+  - Why? Allowing us to fix mistakes and try to run the tool again it becomes easier to reproduce.
+  - Database is still useless though.

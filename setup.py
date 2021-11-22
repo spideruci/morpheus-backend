@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
-from morpheus import __version__
+from morpheus import __name__, __version__
 
 setup(
-    name='morpheus',
+    name=__name__,
     version=__version__,
     description="Backend for the morpheus visualization",
     packages=['morpheus',],
@@ -23,7 +23,7 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
-            'matrix=morpheus.matrix:main',
+            f'{__name__}=morpheus.matrix:main',
         ]
     }
 )

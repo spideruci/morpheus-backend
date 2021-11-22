@@ -1,1 +1,2 @@
-__version__='0.2'
+__name__="matrix"
+__version__='0.2.1'

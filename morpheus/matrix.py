@@ -1,4 +1,5 @@
 import logging
+from morpheus import __name__, __version__
 from pathlib import Path
 from argparse import ArgumentParser
 from morpheus.commands.analysis import run_analysis
@@ -21,6 +22,9 @@ def parse_arguments():
     Parse arguments to run pluperfect.
     """
     parser = ArgumentParser(prog="Matrix", description="Collection of tools used to analyze, store, and serve the historical coverage data for the morpheus visualization.")
+
+    parser.add_argument('-v', '--version', action='version', version=f"{__name__}: v{__version__}")
+
     subparsers = parser.add_subparsers()
     # -------------------------------------------
     #  Analysis CLI parser
@@ -63,7 +67,7 @@ def parse_arguments():
     # -------------------------------------------
     #  Create static coverage CLI parser
     # -------------------------------------------
-    json_parser = subparsers.add_parser("extract", help="Extract Morpheus coverage data from databse")
+    json_parser = subparsers.add_parser("extract", help="Extract Morpheus coverage data from database")
     json_parser.add_argument('database', type=Path, help='Path to database.')
     json_parser.add_argument('output', type=Path, help='Output directory.')
     json_parser.set_defaults(func=morpheus_extract_coverage)

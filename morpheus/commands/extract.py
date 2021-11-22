@@ -1,4 +1,3 @@
-import functools
 import logging
 from morpheus.api.endpoints.project_routes import ProjectsRoute, CommitsRoute
 from morpheus.api.endpoints.methods_routes import MethodsInProjectRoute
@@ -10,7 +9,6 @@ from functools import wraps
 from time import time
 import json
 from pathlib import Path
-from multiprocessing import Pool, cpu_count
 import os
 
 logger = logging.getLogger(__name__)
@@ -47,7 +45,7 @@ def get_commit_coverage(project_id: int, base_dir: Path):
 
         (coverage_response, status) = coverage.get(project_id, commit_id)        
         if status != 200:
-            logger.error("code:%s msg:%s", status,  coverage_response)
+            logger.error("[Request] project_id:%s, commit_id:%s, code:%s msg:%s", project_id, commit_id, status,  coverage_response.get('msg', ""))
 
         store(commit_coverage_dir, f'{commit_id}.json',coverage_response)
 
@@ -72,7 +70,7 @@ def get_method_coverage(project_id: int, base_dir: Path):
 
         (coverage_response, status) = coverage.get(project_id, method_id)        
         if status != 200:
-            logger.error("code:%s msg:%s", status,  coverage_response)
+            logger.error("[Request] project_id:%s, method_id:%s, code:%s msg:%s", project_id, method_id, status,  coverage_response.get('msg', ""))
 
         store(method_coverage_dir, f'{method_id}.json', coverage_response)
 
@@ -100,7 +98,7 @@ def get_test_coverage(project_id: int, base_dir: Path):
 
         (coverage_response, status) = coverage.get(project_id, test_id)        
         if status != 200:
-            logger.error("code:%s msg:%s", status,  coverage_response)
+            logger.error("[Request] project_id:%s, test_id:%s, code:%s msg:%s", project_id, test_id, status,  coverage_response.get('msg', ""))
 
         store(test_coverage_dir, f'{test_id}.json', coverage_response)
 
@@ -131,14 +129,14 @@ def extract_coverage(database: Path, output_path: Path):
 
     store(root_dir, 'projects.json', projects_response)
 
-    with Pool(cpu_count()) as p:
-        collectors = [get_commit_coverage, get_method_coverage, get_test_coverage]
-        projects = projects_response.get('projects')
+    collectors = [get_commit_coverage, get_method_coverage, get_test_coverage]
+    projects = projects_response.get('projects')
 
-        logger.info(projects)
-        for f in collectors:
-            project_ids = map(lambda p : p.get('id'), projects)
+    logger.info(projects)
+    for f in collectors:
+        project_ids = map(lambda p : p.get('id'), projects)
 
-            for pid in project_ids:
-                f(pid, root_dir)
+        for pid in project_ids:
+            logger.info("[Project %d] Started extracting data for: %s", pid, f.__name__)
+            f(pid, root_dir)
 
