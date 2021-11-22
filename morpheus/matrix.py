@@ -41,8 +41,12 @@ def parse_arguments():
     #  Create database CLI parser
     # -------------------------------------------
     db_parser = subparsers.add_parser("db", help="Create database with morpheus coverage data.")
-    db_parser.add_argument('input_folder', type=Path, help='Directory of the data.')
+
     db_parser.add_argument('output', type=Path, help="Database location")
+
+    project_selection = db_parser.add_mutually_exclusive_group(required=True)
+    project_selection.add_argument('--project', type=Path, help="Project path to store in database")
+    project_selection.add_argument('--all', type=Path, help="Path to directory of projects to store in database")
 
     db_parser.set_defaults(func=morpheus_create_database)
 
@@ -77,7 +81,11 @@ def morpheus_analysis(args):
 
 
 def morpheus_create_database(args):
-    create_database(args.input_folder, args.output)
+
+    if args.all is not None:
+        create_database(args.all, args.output, False)
+    elif args.project is not None:
+        create_database(args.project, args.output, True)
 
 def morpheus_start_backend(args):
     start_morpheus_backend(args.database, args.host, args.port, args.debug)

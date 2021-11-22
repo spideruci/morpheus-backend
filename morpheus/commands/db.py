@@ -30,7 +30,7 @@ def load_json(path) -> dict:
     with open(path) as f:
         return json.load(f)
 
-def create_database(input_directory, database_path: Path=None):
+def create_database(input_directory, database_path: Path, is_single_project: bool):
 
     # Update configuration
     if database_path is not None:
@@ -43,19 +43,21 @@ def create_database(input_directory, database_path: Path=None):
     
     init_db(engine)
 
-    # Obtain all projects
-    projects = []
+    # Check if input_directory exists and is a directory
     if not isdir(input_directory):
-        logger.error("Input directory doesn't exist")
+        logger.error("Input directory doesn't exist, %s", input_directory)
         return 1
 
-    projects = get_directories(input_directory)
+    # Obtain all projects, except if path is for single project
+    projects = [(os.path.basename(input_directory) , input_directory)]
+    if not is_single_project:
+        projects = get_directories(input_directory)
 
     if not projects:
         logger.error("No projects found in input directory")
         exit(1)
     else:
-        logger.debug("Projects found: %s", projects)
+        logger.debug("Project(s) found: %s", projects)
 
     tacoco_parser = TacocoParser()
     method_parser = MethodParser()
