@@ -1,8 +1,10 @@
 # Morpheus tools
 
 ## Install
+
+To work sqlite3 and python3.10 needs to be installed.
 ```
-python3 -m virtualenv venv/
+python3 -m virtualenv venv/ -p <path-to-python3.10>
 pip install -e .
 ```
 

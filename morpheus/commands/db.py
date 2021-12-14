@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 from os.path import isdir, realpath, join, sep
+from typing import Dict, List
 from morpheus.analysis.parser.methods import MethodParser
 from morpheus.analysis.parser.tacoco import TacocoParser
 from morpheus.config import Config
@@ -26,7 +27,7 @@ def get_directories(root_path) -> list[tuple[str, Path]]:
 
     return projects
 
-def load_json(path) -> dict:
+def load_json(path) -> List[Dict]:
     with open(path) as f:
         return json.load(f)
 
@@ -34,7 +35,7 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
 
     # Update configuration
     if database_path is not None:
-        Config.DATABASE_PATH = database_path.resolve()
+        Config.DATABASE_PATH = str(database_path.resolve())
 
     logger.debug("Database path: %s", Config.DATABASE_PATH)
 
@@ -104,6 +105,10 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
                 commit=commit,
                 methods=parsed_methods
             )
+
+            # Clean up stored data to reduce memory consumption
+            del methods_json
+            del parsed_methods
             logger.info("\tFinished method storing")
 
             #  Parse Coverage.
@@ -120,6 +125,10 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
                 commit=commit,
                 coverage=parsed_coverage
             )
+
+            # Clean up stored data to reduce memory consumption
+            del coverage_json
+            del parsed_coverage
             logger.info("\tFinished Tacoco storing")
 
             

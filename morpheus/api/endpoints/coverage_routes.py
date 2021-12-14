@@ -1,4 +1,5 @@
 import logging
+from typing import Dict, List
 from flask_restx.resource import Resource
 from morpheus.api.rest import api
 from morpheus.database.db import get_session
@@ -26,12 +27,12 @@ logger = logging.getLogger(__name__)
 class MethodTestCoverageRoute(Resource):
     def get(self, project_id, commit_id):
         Session = get_session()
-        project: Project = ProjectQuery.get_project(Session, project_id)
+        project: Project|None = ProjectQuery.get_project(Session, project_id)
 
         if project is None:
             return {"error": f"Commit with id '{project_id}' was not found..."}, 404
 
-        commit: Commit = CommitQuery.get_commit(Session, commit_id)
+        commit: Commit|None = CommitQuery.get_commit(Session, commit_id)
         
         if commit is None:
             return {"error": f"Commit with id '{commit_id}' was not found..."}, 404
@@ -40,6 +41,7 @@ class MethodTestCoverageRoute(Resource):
         tests = MethodCoverageQuery.get_tests(Session, project, commit)
         edges = MethodCoverageQuery.get_edges(Session, commit)
 
+        logger.info("Methods: %s, Tests: %s, Edges: %s", len(methods), len(tests), len(edges))
         return {
             "project": row2dict(project),
             "commit": row2dict(commit),
@@ -57,16 +59,16 @@ class ProdMethodHistoryRoute(Resource):
     def get(self, project_id, method_id):
         Session = get_session()
 
-        project: Project = ProjectQuery.get_project(Session, project_id)
+        project: Project|None = ProjectQuery.get_project(Session, project_id)
 
-        method : ProdMethod = MethodQuery.get_method(Session, method_id)
+        method : ProdMethod|None = MethodQuery.get_method(Session, method_id)
 
         if method is None:
             return {"msg": f'Method with id {method_id} not found...'}
 
         commits = []
 
-        versions = Session.query(ProdMethodVersion)\
+        versions: List[ProdMethodVersion] = Session.query(ProdMethodVersion)\
             .filter(ProdMethodVersion.method_id==method.id)\
             .all()
 
@@ -108,17 +110,17 @@ class ProdMethodHistoryRoute(Resource):
 class TestMethodHistoryRoute(Resource):
     @ns.response(200, 'Success')
     @ns.response(404, 'Test not found.')
-    def get(self, project_id, test_id):
+    def get(self, project_id: int, test_id: int):
         Session = get_session()
 
-        project = Session.query(Project) \
+        project: Project|None = Session.query(Project) \
             .filter(Project.id == project_id) \
             .first()
 
         if project is None:
             return {}, 404
 
-        test: TestMethod = Session.query(TestMethod) \
+        test: TestMethod|None = Session.query(TestMethod) \
             .filter(TestMethod.id == test_id) \
             .first()
 
@@ -126,7 +128,7 @@ class TestMethodHistoryRoute(Resource):
             return {"msg": 'Test was not found...'}, 404
 
         # Covered lines, but filtered to method and commit (so per pair only one covered line)
-        edges = Session.query(LineCoverage.commit_id, LineCoverage.method_version_id, LineCoverage.test_result) \
+        edges: List[Dict] = Session.query(LineCoverage.commit_id, LineCoverage.method_version_id, LineCoverage.test_result) \
             .filter(
                 LineCoverage.test_id == test.id,
                 LineCoverage.method_version_id !=  None

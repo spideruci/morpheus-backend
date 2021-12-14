@@ -10,12 +10,12 @@ setup(
     license='MIT',
     install_requires = [
         'pyyaml==5.4',
-        'GitPython==3.1.12',
-        'flask==1.1.2',
-        'flask-cors==3.0.9',
-        'sqlalchemy==1.3',
-        'flask-restx==0.5.1',
-        'python-dotenv==0.15.0'
+        'GitPython==3.1',
+        'flask==1.1',
+        'flask-cors==3.0',
+        'sqlalchemy==1.4',
+        'flask-restx==0.5',
+        'python-dotenv==0.15'
     ],
     tests_require = [
         'pytest',

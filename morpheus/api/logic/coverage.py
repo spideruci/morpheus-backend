@@ -1,6 +1,9 @@
+from typing import Dict, List, Tuple
 from morpheus.database.models.methods import LineCoverage, TestMethod, ProdMethod, ProdMethodVersion
 from morpheus.database.models.repository import Project, Commit
 from sqlalchemy import and_
+from sqlalchemy.orm.query import Query
+from sqlalchemy.orm.session import Session
 
 class CommitQuery():
     @staticmethod
@@ -38,7 +41,7 @@ class MethodQuery():
             .first()
 
     @staticmethod
-    def get_method_versions(session, method_id):
+    def get_method_versions(session: Session, method_id: int) -> List[ProdMethodVersion]:
         return session.query(ProdMethodVersion)\
             .filter(ProdMethodVersion.method_id==method_id)\
             .all()
@@ -46,7 +49,7 @@ class MethodQuery():
 
 class MethodCoverageQuery():
     @staticmethod
-    def get_tests(session, project, commit):
+    def get_tests(session, project, commit)-> List[TestMethod]:
         return session.query(TestMethod) \
             .join(LineCoverage, (LineCoverage.test_id==TestMethod.id)) \
             .filter(and_(
@@ -61,14 +64,14 @@ class MethodCoverageQuery():
             .all()
 
     @staticmethod
-    def get_methods(session, project, commit=None):
+    def get_methods(session: Session, project: Project, commit: Commit=None)-> List[ProdMethod]:
         # This returns all the methods, but the edges point to method versions...
-        query = session.query(ProdMethod) \
+        query: Query = session.query(ProdMethod) \
             .join(ProdMethodVersion, (ProdMethodVersion.method_id==ProdMethod.id))\
             .filter(ProdMethod.project_id==project.id)
         
         if commit is not None:
-            query.filter(ProdMethodVersion.commit_id==commit.id)\
+            query = query.filter(ProdMethodVersion.commit_id==commit.id)
 
         return query.order_by(
                 ProdMethod.file_path.desc(),
@@ -78,7 +81,7 @@ class MethodCoverageQuery():
         ).all()
 
     @staticmethod
-    def get_edges(session, commit):
+    def get_edges(session, commit) -> List[Dict]:
         result = session.query(LineCoverage.test_id, ProdMethodVersion.method_id, LineCoverage.test_result) \
             .join(ProdMethodVersion, (ProdMethodVersion.id==LineCoverage.method_version_id))\
             .filter(LineCoverage.commit_id==commit.id)\
@@ -91,7 +94,7 @@ class MethodCoverageQuery():
 
 class HistoryQuery():
     @staticmethod
-    def get_method_history(session, method: ProdMethod):
+    def get_method_history(session, method: ProdMethod) -> List[Tuple[TestMethod, LineCoverage]]:
         version: ProdMethodVersion
         result = []
         for version in method.versions:
