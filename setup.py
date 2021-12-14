@@ -14,7 +14,7 @@ setup(
         'flask==1.1',
         'flask-cors==3.0',
         'sqlalchemy==1.4',
-        'flask-restx==0.5',
+        'flask-restx==0.5.1',
         'python-dotenv==0.15'
     ],
     tests_require = [
