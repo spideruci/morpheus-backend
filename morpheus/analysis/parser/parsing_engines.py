@@ -54,7 +54,8 @@ def __parse_package_name(engine, test_method):
         case TestEngine.VINTAGE:
             path = re.search(r'runner:([\w\._()$]+)', test_method).group(1)
         case TestEngine.NOENGINE:
-            path = re.search(r'[\w\_]+\(([\w\.]+)\)', test_method).group(1)
+            if (path := re.search(r'[\w\_]+\[*[0-9]*\]*\(([\w\.]+)\)', test_method)) is not None:
+                path = path.group(1)
     
     split_path = path.split('.')
 
@@ -75,7 +76,7 @@ def __parse_method_name(engine, test_method):
                 return result.group(1)
 
             # Parameterized Tests
-            elif (result := re.search(r'test-template:([\w%=,\-\.,\s\\]+)\([\w\s\-,.$]*\)', test_method)) is not None:
+            elif (result := re.search(r'test-template:([\w%=,\-\.,\s\\]+\([\w\s\-,.$]*\))', test_method)) is not None:
                 method_name = result.group(1)
                 invocation_number = re.search(r'test-template-invocation:#([0-9]+)', test_method).group(1)
                 return f'{method_name}[{invocation_number}]'
@@ -100,7 +101,9 @@ def __parse_method_name(engine, test_method):
                     return test_method.split('.')[0]
         case TestEngine.NOENGINE:
             if (result := re.search(r'([\w\_]+)\([\w\.]+\)', test_method)) is not None:
+                return f"{result.group(1)}"
 
+            elif (result := re.search(r'([\w%=,\-\.,\s\\]+\[[0-9]+\])\([\w\s\-,.$]*\)', test_method)) is not None:
                 return f"{result.group(1)}"
 
     raise Exception("Unable to parse method")

@@ -4,12 +4,13 @@ import json
 from pathlib import Path
 from typing import Tuple, List
 from morpheus.analysis.util.subject import AnalysisRepo
-from morpheus.analysis.tools import TacocoRunner, tacoco
+from morpheus.analysis.tools import TacocoRunner
 from morpheus.analysis.tools import MethodParserRunner
 from morpheus.database.models import Commit, Project
 from morpheus.config import Config
 from morpheus.database.util import row2dict
 from os.path import sep, exists
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -64,9 +65,13 @@ def run_analysis(url, output_path: Path, current, tags, commits, add_install=Fal
             else:
                 logger.info(f'Output per file: \n\tMethod File: {method_file_path}\n\tTacoco File: {tacoco_file_path}')
 
-def _analysis(repo: AnalysisRepo, tacoco_runner: TacocoRunner, parser_runner: MethodParserRunner, output_path: Path, add_install: bool) -> Tuple[bool, str, str]:
+def _analysis(repo: AnalysisRepo, tacoco_runner: TacocoRunner, parser_runner: MethodParserRunner, output_path: Path, add_install: bool) -> Tuple[bool, str|None, str|None]:
     # Before each analysis remove all generated files of previous run
     repo.clean()
+
+    # Combine data
+    commit: Commit = repo.get_current_commit()
+    output_path = output_path / repo.get_project_name() / commit.sha
 
     # Try compiling the project
     try:
@@ -84,13 +89,13 @@ def _analysis(repo: AnalysisRepo, tacoco_runner: TacocoRunner, parser_runner: Me
         return (False, None, None)
 
     # Start analysis
-    parser_runner.run()
-    tacoco_runner.run()
-
-    # Combine data
-    commit: Commit = repo.get_current_commit()
-
-    output_path = output_path / repo.get_project_name() / commit.sha
+    try:
+        parser_runner.run()
+        tacoco_runner.run()
+    except Exception as e:
+        logger.error("%s", e)
+        shutil.rmtree(output_path)
+        return (False, None, None)
 
     with open(output_path / "commits.json", 'w') as f:
             f.write(json.dumps(row2dict(commit)))

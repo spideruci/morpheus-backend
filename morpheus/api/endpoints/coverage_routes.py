@@ -64,9 +64,9 @@ class ProdMethodHistoryRoute(Resource):
         method : ProdMethod|None = MethodQuery.get_method(Session, method_id)
 
         if method is None:
-            return {"msg": f'Method with id {method_id} not found...'}
+            return {"msg": f'Method with id {method_id} not found...'}, 404
 
-        commits = []
+        commits: List[Commit] = []
 
         versions: List[ProdMethodVersion] = Session.query(ProdMethodVersion)\
             .filter(ProdMethodVersion.method_id==method.id)\
@@ -76,7 +76,7 @@ class ProdMethodHistoryRoute(Resource):
             commits.append(CommitQuery.get_commit(Session, version.commit_id))
 
         if not commits:
-            return {'msg': 'fuck2'}
+            return {'msg': 'Commits not found...'}, 404
 
         versions_ids = [version.id for version in versions]
         edges = Session.query(LineCoverage.test_id, LineCoverage.commit_id, LineCoverage.test_result) \
@@ -118,14 +118,14 @@ class TestMethodHistoryRoute(Resource):
             .first()
 
         if project is None:
-            return {}, 404
+            return {"msg": f"Project was not found - id:{project_id}"}, 404
 
         test: TestMethod|None = Session.query(TestMethod) \
             .filter(TestMethod.id == test_id) \
             .first()
 
         if test is None:
-            return {"msg": 'Test was not found...'}, 404
+            return {"msg": f'Test was not found... test_id: {test_id}'}, 404
 
         # Covered lines, but filtered to method and commit (so per pair only one covered line)
         edges: List[Dict] = Session.query(LineCoverage.commit_id, LineCoverage.method_version_id, LineCoverage.test_result) \
@@ -161,10 +161,15 @@ class TestMethodHistoryRoute(Resource):
         methods_version_to_global_id_map = {}
 
         methods = list()
+        method_ids: List[int] = []
         for method, version_id in method_query_result:
             if version_id not in methods_version_to_global_id_map:
                 methods_version_to_global_id_map[version_id] = method.id
-            methods.append(method)
+
+            # Make sure to only return unique instances of methods.
+            if method.id not in method_ids:
+                methods.append(method)
+                method_ids.append(method.id)
 
         commits = Session.query(Commit) \
             .filter(

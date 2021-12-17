@@ -15,6 +15,10 @@ class TacocoParser():
     def parse(self, tacoco_dict: Dict) -> List[Tuple[TestMethod, LineCoverage]]:
         logger.info("Start parsing tacoco data...")
 
+        if tacoco_dict.get('testCount', 0) <= 1:
+            logger.error("Bad coverage file")
+            raise RuntimeError("Bad coverage file")
+
         # Testcases
         test_map: Dict[int, Tuple[TestMethod, str]] = {}
         if 'testsIndex' in tacoco_dict:
@@ -133,27 +137,28 @@ class TacocoParser():
                         )
                     ).first()
 
-        for test, lines in coverage:
-            if test.id is None:
-                logger.error("Test not stored in database %s.%s.%s project_id: %s", test.package_name, test.class_name, test.method_name, test.project_id)
-                continue
-
-            for line in lines:
-                result = __get_method_version_id(commit.id, line.full_name, line.line_number)
-                
-                line.commit_id = commit.id
-                line.test_id = test.id
-
-                if result is None:
-                    # logger.warning("Line version not stored: %s, %s, %s, %s, %s, %s, %s", line.id, line.commit_id, line.test_id, line.method_version_id, line.test_result, line.full_name, line.line_number)
+        try:
+            for test, lines in coverage:
+                if test.id is None:
+                    logger.error("Test not stored in database %s.%s.%s project_id: %s", test.package_name, test.class_name, test.method_name, test.project_id)
                     continue
 
-                (line.method_version_id, ) = result
+                for line in lines:
+                    result = __get_method_version_id(commit.id, line.full_name, line.line_number)
 
-                # if line.commit_id == 1 and line.test_id == 1377 and line.method_version_id==482  and line.line_number == 1275:
-                #     logger.debug("Test: %s, %s, %s, %s", test.id, test.method_name, test.class_name, test.package_name)
-                
-                session.add(line)
+                    line.commit_id = commit.id
+                    line.test_id = test.id
+
+                    if result is None:
+                        # logger.warning("Line version not stored: %s, %s, %s, %s, %s, %s, %s", line.id, line.commit_id, line.test_id, line.method_version_id, line.test_result, line.full_name, line.line_number)
+                        continue
+
+                    # if line.commit_id == 2 and line.test_id == 1 and line.method_version_id == 114  and line.line_number == 119:
+                    #     logger.debug("Test: %s, %s, %s, %s", test.id, test.method_name, test.class_name, test.package_name)
+
+                    session.add(line)
+        except exc.IntegrityError as e:
+            logger.error(e)
 
         logger.debug('Iterating through lines: %s', timeit.default_timer() - start_time)
 

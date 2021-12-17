@@ -32,4 +32,9 @@ class MethodParserRunner():
         """
 
         p = Popen(run_method_parser_cmd, cwd=self.history_slicer_path, shell=True)
-        return p.wait()
+        ret = p.wait()
+
+        if ret != 0:
+            raise RuntimeError("Failed to parse the methods...")
+
+        return 0

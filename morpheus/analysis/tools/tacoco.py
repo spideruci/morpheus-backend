@@ -55,10 +55,12 @@ class TacocoRunner():
         return self
 
     def __get_logfile(self, commit):
-        log_path =  (self.file_output_dir / self.__repo.get_current_commit().sha / "tacoco_run.log").resolve()
+        log_dir: Path =  self.file_output_dir / "logs"
 
-        os.makedirs((self.file_output_dir / self.__repo.get_current_commit().sha).resolve(), exist_ok=True)
-        return open(log_path, "a")
+        log_dir.mkdir(parents=True, exist_ok=True)
+
+        log_file = log_dir / f"{self.__repo.get_current_commit().sha}.log"
+        return open(log_file, "a")
 
     def compile(self):
         logger.info("[TACOCO] Phase: compile: %s", self.project_path)
@@ -119,20 +121,18 @@ class TacocoRunner():
             logger.debug("[TACOCO] command run: %s", cmd)
             result = subprocess.run(cmd, stdout=log_file, stderr=log_file, env=my_env, shell=True, cwd=self.project_path)
 
-        return result.returncode
+            if  result.returncode != 0:
+                raise RuntimeError(f"Command failed to run: {cmd}")
 
     def run(self):
         if self.__run_tacoco_coverage() != 0:
             logger.error("Unable to obtain coverage...")
-            return 1
 
         if self.__run_tacoco_analysis() != 0:
             logger.error("Unable to analyse exec file...")
-            return 1
         
         if self.__run_tacoco_reader() != 0:
             logger.error("Unable to convert to readable format...")
-            return 1
         
         return 0
 
@@ -160,7 +160,11 @@ class TacocoRunner():
         # Store all logs per project per commit
         with self.__get_logfile(commit.sha) as log_file:
             result = subprocess.run(run_tacoco_coverage_cmd, cwd=self.tacoco_path, stderr=log_file, stdout=log_file, shell=True)
-        return result.returncode
+
+            if  result.returncode != 0:
+                raise RuntimeError(f"Command failed to run: {run_tacoco_coverage_cmd}")
+
+        return 0
 
     def __run_tacoco_analysis(self):
         logging.info("[TACOCO] analyze coverage file: %s", self.project_path)
@@ -185,7 +189,10 @@ class TacocoRunner():
         # Store all logs per project per commit
         with self.__get_logfile(commit.sha) as log_file:
             result = subprocess.run(run_tacoco_analysis_cmd, cwd=self.tacoco_path, stderr=log_file, stdout=log_file, shell=True)
-        return result.returncode
+            if  result.returncode != 0:
+                raise RuntimeError(f"Command failed to run: {run_tacoco_analysis_cmd}")
+
+        return 0
 
     def __run_tacoco_reader(self):
         logging.info("[TACOCO] convert coverage to json: %s", self.project_path)
@@ -203,4 +210,7 @@ class TacocoRunner():
         # Store all logs per project per commit
         with self.__get_logfile(commit.sha) as log_file:
             result = subprocess.run(run_tacoco_reader_cmd, cwd=self.tacoco_path, stderr=log_file, stdout=log_file, shell=True)
-        return result.returncode
+            if  result.returncode != 0:
+                raise RuntimeError(f"Command failed to run: {run_tacoco_reader_cmd}")
+
+        return 0

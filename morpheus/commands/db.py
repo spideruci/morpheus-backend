@@ -60,9 +60,6 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
     else:
         logger.debug("Project(s) found: %s", projects)
 
-    tacoco_parser = TacocoParser()
-    method_parser = MethodParser()
-
     # Iterate over project and directory name tuple
     for (project_name, project_path) in projects:
         logger.info(f"Start storing project '{project_name}' in database.")
@@ -93,12 +90,14 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
 
             #  Parse Methods
             methods_json = load_json(commit_path / 'methods.json')
+            method_parser = MethodParser()
 
             parsed_methods = method_parser\
                 .set_commit(commit) \
                 .parse(methods_json)
             
             logger.info("Start method storing, total: %s", len(parsed_methods))
+
             method_parser.store(
                 session=Session,
                 project=project,
@@ -107,28 +106,35 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
             )
 
             # Clean up stored data to reduce memory consumption
+            del method_parser
             del methods_json
             del parsed_methods
             logger.info("\tFinished method storing")
 
             #  Parse Coverage.
+            parsed_coverage: List = []
             coverage_json = load_json(commit_path / 'coverage-cov-matrix.json')
-            parsed_coverage = tacoco_parser\
-                .parse(coverage_json)
-            
-            logger.debug('Number of testcases: %s', len(parsed_coverage))
+            try:
+                tacoco_parser = TacocoParser()
+                parsed_coverage = tacoco_parser\
+                    .parse(coverage_json)
 
-            logger.info("Start Tacoco storing")
-            tacoco_parser.store(
-                session=Session,
-                project=project,
-                commit=commit,
-                coverage=parsed_coverage
-            )
+                logger.debug('Number of testcases: %s', len(parsed_coverage))
 
-            # Clean up stored data to reduce memory consumption
-            del coverage_json
-            del parsed_coverage
+                logger.info("Start Tacoco storing")
+                tacoco_parser.store(
+                    session=Session,
+                    project=project,
+                    commit=commit,
+                    coverage=parsed_coverage
+                )
+            except RuntimeError:
+                Session.delete(commit)
+                Session.commit()
+                continue
+            finally:
+                # Clean up stored data to reduce memory consumption
+                del tacoco_parser
+                del coverage_json
+                del parsed_coverage
             logger.info("\tFinished Tacoco storing")
-
-            

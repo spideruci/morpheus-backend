@@ -46,7 +46,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.file"
         assert class_name == "DeletingPathVisitorTest"
-        assert method_name == "testDeleteEmptyDirectory[1]"
+        assert method_name == "testDeleteEmptyDirectory(org.apache.commons.io.file.DeletingPathVisitor)[1]"
         assert is_passing
 
 
@@ -61,7 +61,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.output"
         assert class_name == "ByteArrayOutputStreamTestCase"
-        assert method_name == "testToBufferedInputStreamEmpty[4]"
+        assert method_name == "testToBufferedInputStreamEmpty(java.lang.String, org.apache.commons.io.function.IOFunction)[4]"
         assert is_passing
 
     parameterized_test_string3 = "[1] ByteArrayOutputStream.[engine:junit-jupiter]/[class:org.apache.commons.io.output.ByteArrayOutputStreamTestCase]/[test-template:testToInputStreamEmpty(java.lang.String, org.apache.commons.io.output.ByteArrayOutputStreamTestCase$BAOSFactory)]/[test-template-invocation:#1]"
@@ -75,7 +75,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.output"
         assert class_name == "ByteArrayOutputStreamTestCase"
-        assert method_name == "testToInputStreamEmpty[1]"
+        assert method_name == "testToInputStreamEmpty(java.lang.String, org.apache.commons.io.output.ByteArrayOutputStreamTestCase$BAOSFactory)[1]"
         assert is_passing
 
     parameterized_test_string4 = "test-file-utf8-win-linebr.bin, encoding\u003dUTF-8, blockSize\u003dnull, useNonDefaultFileSystem\u003dfalse, isResource\u003dtrue.[engine:junit-jupiter]/[class:org.apache.commons.io.input.ReversedLinesFileReaderTestParamFile]/[test-template:testDataIntegrityWithBufferedReader(java.lang.String, java.lang.String, java.lang.Integer, boolean, boolean)]/[test-template-invocation:#9]"
@@ -89,7 +89,7 @@ class TestParsingJupiterTestMethods(unittest.TestCase):
 
         assert package == "org.apache.commons.io.input"
         assert class_name == "ReversedLinesFileReaderTestParamFile"
-        assert method_name == "testDataIntegrityWithBufferedReader[9]"
+        assert method_name == "testDataIntegrityWithBufferedReader(java.lang.String, java.lang.String, java.lang.Integer, boolean, boolean)[9]"
         assert is_passing
 
 

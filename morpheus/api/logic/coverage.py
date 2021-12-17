@@ -74,7 +74,6 @@ class MethodCoverageQuery():
             query = query.filter(ProdMethodVersion.commit_id==commit.id)
 
         return query.order_by(
-                ProdMethod.file_path.desc(),
                 ProdMethod.package_name.desc(),
                 ProdMethod.class_name.desc(),
                 ProdMethod.method_decl.desc()

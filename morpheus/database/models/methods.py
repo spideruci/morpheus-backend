@@ -11,11 +11,8 @@ class ProdMethod(Base):
     method_decl = Column(String, nullable=False)
     class_name = Column(String, nullable=False)
     package_name = Column(String, nullable=False)
-    file_path = Column(String, nullable=False)
-    
-    # versions = relationship("ProdMethodVersion", backref=backref('method', uselist=False, lazy='dynamic'))
 
-    UniqueConstraint(project_id, method_name, method_decl, class_name, package_name, file_path)
+    UniqueConstraint(project_id, method_name, method_decl, class_name, package_name)
 
 class ProdMethodVersion(Base):
     __tablename__ = 'method_versions'
