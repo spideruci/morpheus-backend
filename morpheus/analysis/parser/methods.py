@@ -6,9 +6,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 class MethodParser():
-    def set_commit(self, commit: Commit):
-        self.commit = commit
-        return self
 
     def __parse_single_method(self, method_dict : Dict) -> Tuple[ProdMethod, ProdMethodVersion]:
         versions = method_dict['versions'][-1]
@@ -24,7 +21,6 @@ class MethodParser():
             line_start=int(versions['lineStart']),
             line_end=int(versions['lineEnd']),
             file_path=method_dict['filePath'],
-            commit_id=self.commit.id
         )
 
         return prod_method, version
@@ -37,6 +33,7 @@ class MethodParser():
     def store(self, session, project, commit, methods: List[ProdMethod]):
         method_count = session.query(ProdMethod).count()
         logger.info('Number of methods stored in DB: %s', method_count)
+        logger.info('Number of methods in commit: %s', len(methods))
 
         for method, _ in methods:
             method.project_id = project.id
@@ -62,6 +59,8 @@ class MethodParser():
                 continue
 
             version.method_id = method.id
+            version.commit_id = commit.id
+
             session.add(version)
 
         session.commit()

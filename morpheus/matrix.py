@@ -45,7 +45,6 @@ def parse_arguments():
     #  Create database CLI parser
     # -------------------------------------------
     db_parser = subparsers.add_parser("db", help="Create database with morpheus coverage data.")
-
     db_parser.add_argument('output', type=Path, help="Database location")
 
     project_selection = db_parser.add_mutually_exclusive_group(required=True)
@@ -67,10 +66,10 @@ def parse_arguments():
     # -------------------------------------------
     #  Create static coverage CLI parser
     # -------------------------------------------
-    json_parser = subparsers.add_parser("extract", help="Extract Morpheus coverage data from database")
-    json_parser.add_argument('database', type=Path, help='Path to database.')
-    json_parser.add_argument('output', type=Path, help='Output directory.')
-    json_parser.set_defaults(func=morpheus_extract_coverage)
+    extract_json_parser = subparsers.add_parser("extract", help="Extract Morpheus coverage data from database")
+    extract_json_parser.add_argument('database', type=Path, help='Path to database.')
+    extract_json_parser.add_argument('output', type=Path, help='Output directory.')
+    extract_json_parser.set_defaults(func=morpheus_extract_coverage)
 
     return parser.parse_args()
 
@@ -85,11 +84,7 @@ def morpheus_analysis(args):
 
 
 def morpheus_create_database(args):
-
-    if args.all is not None:
-        create_database(args.all, args.output, False)
-    elif args.project is not None:
-        create_database(args.project, args.output, True)
+    create_database(args.project, args.output, True)
 
 def morpheus_start_backend(args):
     start_morpheus_backend(args.database, args.host, args.port, args.debug)

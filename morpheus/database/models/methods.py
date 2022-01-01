@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, UniqueConstraint
-from sqlalchemy.orm import relationship, backref
 from . import Base
+
 
 class ProdMethod(Base):
     __tablename__ = 'prodmethods'
@@ -12,7 +12,8 @@ class ProdMethod(Base):
     class_name = Column(String, nullable=False)
     package_name = Column(String, nullable=False)
 
-    UniqueConstraint(project_id, method_name, method_decl, class_name, package_name)
+    UniqueConstraint(project_id, package_name, class_name, method_decl)
+
 
 class ProdMethodVersion(Base):
     __tablename__ = 'method_versions'
@@ -24,7 +25,10 @@ class ProdMethodVersion(Base):
     line_end = Column(Integer, nullable=False)
     file_path = Column(String, nullable=False)
 
-    UniqueConstraint(method_id, commit_id, file_path, line_start, line_end)
+    UniqueConstraint(method_id, commit_id, file_path)
+
+    def __str__(self):
+        return f"{self.id} {self.method_id} {self.commit_id} {self.line_start} {self.line_end} {self.file_path}"
 
 class TestMethod(Base):
     __tablename__ = 'testcases'
@@ -35,9 +39,8 @@ class TestMethod(Base):
     class_name = Column(String, nullable=False)
     method_name = Column(String, nullable=False)
 
-    # covered_lines = relationship("LineCoverage", backref=backref('testmethod', lazy='dynamic'))
-    
-    UniqueConstraint(project_id, package_name, method_name, class_name)
+    UniqueConstraint(project_id, package_name, class_name, method_name)
+
 
 class LineCoverage(Base):
     __tablename__ = 'linecoverage'

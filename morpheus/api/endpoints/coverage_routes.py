@@ -41,7 +41,7 @@ class MethodTestCoverageRoute(Resource):
         tests = MethodCoverageQuery.get_tests(Session, project, commit)
         edges = MethodCoverageQuery.get_edges(Session, commit)
 
-        logger.info("Methods: %s, Tests: %s, Edges: %s", len(methods), len(tests), len(edges))
+        # logger.info("Methods: %s, Tests: %s, Edges: %s", len(methods), len(tests), len(edges))
         return {
             "project": row2dict(project),
             "commit": row2dict(commit),

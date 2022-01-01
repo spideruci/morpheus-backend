@@ -66,7 +66,7 @@ class TacocoParser():
                             coverage[test_id] = [line]
 
         # Merge to dictionaries and return a list of tuples
-        def _merge(idx) -> Tuple[TestMethod, str, List[LineCoverage]]:
+        def _merge(idx) -> Tuple[TestMethod, List[LineCoverage]]:
             test : TestMethod
             result: str
             
@@ -145,13 +145,18 @@ class TacocoParser():
 
                 for line in lines:
                     result = __get_method_version_id(commit.id, line.full_name, line.line_number)
-
-                    line.commit_id = commit.id
-                    line.test_id = test.id
-
                     if result is None:
                         # logger.warning("Line version not stored: %s, %s, %s, %s, %s, %s, %s", line.id, line.commit_id, line.test_id, line.method_version_id, line.test_result, line.full_name, line.line_number)
                         continue
+
+                    try:
+                        (method_version_id,) = result
+                    except:
+                        raise
+
+                    line.commit_id = commit.id
+                    line.test_id = test.id
+                    line.method_version_id = method_version_id
 
                     # if line.commit_id == 2 and line.test_id == 1 and line.method_version_id == 114  and line.line_number == 119:
                     #     logger.debug("Test: %s, %s, %s, %s", test.id, test.method_name, test.class_name, test.package_name)

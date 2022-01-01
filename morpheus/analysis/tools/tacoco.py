@@ -62,21 +62,23 @@ class TacocoRunner():
         log_file = log_dir / f"{self.__repo.get_current_commit().sha}.log"
         return open(log_file, "a")
 
+    def clean(self):
+        logger.info("[TACOCO] Phase clean: %s", self.project_path)
+        cmd = [f"{self.mvn_cmd} clean"]
+
+        ret = self.__run_command(cmd)
+
+        if ret == 1:
+            raise RuntimeError(f"Failed to run {cmd}")
+
+        return self
+
     def compile(self):
         logger.info("[TACOCO] Phase: compile: %s", self.project_path)
 
         cmd = [f"{self.mvn_cmd} compile"]
 
         ret = self.__run_command(cmd)
-
-        if ret == 1:
-            logger.warn("Compile with java 1.8...")
-
-            pom_file_path = Path(self.project_path) / "pom.xml"
-            self.__update_pom_file(pom_file_path)
-
-            cmd = [f"{self.mvn_cmd} compile"]
-            ret = self.__run_command(cmd)
 
         if ret == 1:
             logger.error("RET %s", ret)

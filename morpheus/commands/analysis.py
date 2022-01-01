@@ -15,10 +15,8 @@ import shutil
 logger = logging.getLogger(__name__)
 
 def run_analysis(url, output_path: Path, current, tags, commits, add_install=False):
-
-    if not os.path.exists(output_path):
-        logger.warning(f'Output path did not exists: {output_path}, so it was created.')
-        os.makedirs(output_path)
+    # Create output path if it doesn't exist:
+    os.makedirs(output_path, exist_ok=True)
 
     with AnalysisRepo(url) as repo:
         logger.info("Project: %s", repo.get_project_name())
@@ -28,9 +26,8 @@ def run_analysis(url, output_path: Path, current, tags, commits, add_install=Fal
 
         project_path = output_path / repo.get_project_name()
 
-        if not exists(project_path):
-            os.makedirs(project_path)
-        with open(f"{project_path}{sep}project.json", 'w') as f:
+        os.makedirs(project_path, exist_ok=True)
+        with open(project_path / "project.json", 'w') as f:
             f.write(json.dumps(row2dict(project)))
 
         if Config.TACOCO_HOME is None or Config.PARSER_HOME is None:
@@ -57,15 +54,15 @@ def run_analysis(url, output_path: Path, current, tags, commits, add_install=Fal
             logger.info("[INFO] Analyze commit: %s", commit.sha)
 
             # Run analysis and return paths to output files
-            success, method_file_path, tacoco_file_path = _analysis(repo, tacoco_runner, parser_runner, output_path, add_install)
-            
-            if not success:
+            try:
+                method_file_path, tacoco_file_path = _analysis(repo, tacoco_runner, parser_runner, output_path, add_install)
+                logger.info(f'Output per file: \n\tMethod File: {method_file_path}\n\tTacoco File: {tacoco_file_path}')
+            except:
                 logger.error('Analysis for %s failed...', commit.sha)
                 continue
-            else:
-                logger.info(f'Output per file: \n\tMethod File: {method_file_path}\n\tTacoco File: {tacoco_file_path}')
 
-def _analysis(repo: AnalysisRepo, tacoco_runner: TacocoRunner, parser_runner: MethodParserRunner, output_path: Path, add_install: bool) -> Tuple[bool, str|None, str|None]:
+
+def _analysis(repo: AnalysisRepo, tacoco_runner: TacocoRunner, parser_runner: MethodParserRunner, output_path: Path, add_install: bool) -> Tuple[str, str]:
     # Before each analysis remove all generated files of previous run
     repo.clean()
 
@@ -77,16 +74,18 @@ def _analysis(repo: AnalysisRepo, tacoco_runner: TacocoRunner, parser_runner: Me
     try:
         if not add_install:
             tacoco_runner \
+                .clean() \
                 .compile() \
                 .test_compile()
         else:
             tacoco_runner \
+                .clean() \
                 .install() \
                 .compile() \
                 .test_compile()
     except Exception as e:
         logger.error("%s", e)
-        return (False, None, None)
+        raise
 
     # Start analysis
     try:
@@ -95,13 +94,13 @@ def _analysis(repo: AnalysisRepo, tacoco_runner: TacocoRunner, parser_runner: Me
     except Exception as e:
         logger.error("%s", e)
         shutil.rmtree(output_path)
-        return (False, None, None)
+        raise
 
     with open(output_path / "commits.json", 'w') as f:
-            f.write(json.dumps(row2dict(commit)))
+        f.write(json.dumps(row2dict(commit)))
 
     logger.info("build successfull...")
-    return (True,
+    return (
         f"methods.json",
         f"coverage.json"
     )

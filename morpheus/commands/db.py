@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from os.path import isdir, realpath, join, sep
 from typing import Dict, List
+from tqdm import tqdm
 from morpheus.analysis.parser.methods import MethodParser
 from morpheus.analysis.parser.tacoco import TacocoParser
 from morpheus.config import Config
@@ -22,7 +23,7 @@ def get_directories(root_path) -> list[tuple[str, Path]]:
         real_project_path = realpath(join(root_path, project))
 
         # Check for each path if it is an directory
-        if isdir(real_project_path):
+        if isdir(real_project_path) and 'logs' not in real_project_path:
             projects.append((project, Path(real_project_path)))
 
     return projects
@@ -61,7 +62,7 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
         logger.debug("Project(s) found: %s", projects)
 
     # Iterate over project and directory name tuple
-    for (project_name, project_path) in projects:
+    for (project_name, project_path) in tqdm(projects):
         logger.info(f"Start storing project '{project_name}' in database.")
 
         # Store Project
@@ -72,69 +73,70 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
             Session.add(project)
             Session.commit()
 
-        for (commit_sha, commit_path) in get_directories(project_path):
-            logger.info(f"Start storing commit '{commit_sha}' of project'{project_name}' in database.")
-
-            # ToDo: Split parsing and storing into separate parts, if coverage doesn't exist, don't store the commit.
+        for (commit_sha, commit_path) in tqdm(get_directories(project_path)):
+            logger.info(f"Start storing commit '{commit_sha}'/{commit_path}")
 
             # Store Commit
             commit_json = load_json(commit_path / 'commits.json')
             commit = Commit(**commit_json, project_id=project.id)
 
-            if Session.query(Project).filter(Project.project_name==project_name).first() is None:
+            if Session.query(Project).filter(Project.project_name==project_name).first() is not None:
                 logger.warning(f"SKIP - Commit '{commit_sha}' of project'{project_name}' is already in the database.")
                 continue
 
             Session.add(commit)
             Session.commit()
 
-            #  Parse Methods
-            methods_json = load_json(commit_path / 'methods.json')
-            method_parser = MethodParser()
-
-            parsed_methods = method_parser\
-                .set_commit(commit) \
-                .parse(methods_json)
-            
-            logger.info("Start method storing, total: %s", len(parsed_methods))
-
-            method_parser.store(
-                session=Session,
-                project=project,
-                commit=commit,
-                methods=parsed_methods
-            )
-
-            # Clean up stored data to reduce memory consumption
-            del method_parser
-            del methods_json
-            del parsed_methods
-            logger.info("\tFinished method storing")
-
-            #  Parse Coverage.
-            parsed_coverage: List = []
-            coverage_json = load_json(commit_path / 'coverage-cov-matrix.json')
+            parsed_methods = []
+            parsed_coverage = []
             try:
-                tacoco_parser = TacocoParser()
-                parsed_coverage = tacoco_parser\
+                #  Parse Methods
+                methods_file = commit_path / 'methods.json'
+                tacoco_file = commit_path / 'coverage-cov-matrix.json'
+
+                logger.debug("Parse methods/tacoco json: %s %s", methods_file, tacoco_file)
+
+                methods_json = load_json(methods_file)
+                parsed_methods = MethodParser()\
+                    .parse(methods_json)
+
+                coverage_json = load_json(tacoco_file)
+                parsed_coverage =  TacocoParser()\
                     .parse(coverage_json)
 
-                logger.debug('Number of testcases: %s', len(parsed_coverage))
+            except RuntimeError:
+                logger.critical("Failing to parse tacoco/methods file - commit: %s", commit.id)
+                Session.delete(commit)
+                Session.flush()
+                del parsed_methods
+                del parsed_coverage
+                continue
+            finally:
+                # Clean up stored data to reduce memory consumption
+                del methods_json
+                del coverage_json
 
-                logger.info("Start Tacoco storing")
-                tacoco_parser.store(
+            #  Parse Coverage.
+            try:
+                MethodParser().store(
+                    session=Session,
+                    project=project,
+                    commit=commit,
+                    methods=parsed_methods
+                )
+
+                TacocoParser().store(
                     session=Session,
                     project=project,
                     commit=commit,
                     coverage=parsed_coverage
                 )
-            except RuntimeError:
+            except RuntimeError as exc:
+                logger.critical("%s", exc)
                 Session.delete(commit)
-                Session.commit()
+                Session.flush()
                 continue
             finally:
                 # Clean up stored data to reduce memory consumption
-                del tacoco_parser
-                del coverage_json
+                del parsed_methods
                 del parsed_coverage
-            logger.info("\tFinished Tacoco storing")

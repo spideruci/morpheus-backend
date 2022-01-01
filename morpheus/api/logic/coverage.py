@@ -1,9 +1,13 @@
+import logging
 from typing import Dict, List, Tuple
 from morpheus.database.models.methods import LineCoverage, TestMethod, ProdMethod, ProdMethodVersion
 from morpheus.database.models.repository import Project, Commit
 from sqlalchemy import and_
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+
+logger = logging.getLogger(__name__)
+
 
 class CommitQuery():
     @staticmethod
@@ -80,7 +84,7 @@ class MethodCoverageQuery():
         ).all()
 
     @staticmethod
-    def get_edges(session, commit) -> List[Dict]:
+    def get_edges(session, commit: Commit) -> List[Dict]:
         result = session.query(LineCoverage.test_id, ProdMethodVersion.method_id, LineCoverage.test_result) \
             .join(ProdMethodVersion, (ProdMethodVersion.id==LineCoverage.method_version_id))\
             .filter(LineCoverage.commit_id==commit.id)\
