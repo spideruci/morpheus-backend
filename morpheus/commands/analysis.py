@@ -71,8 +71,12 @@ def run_analysis(url, output_path: Path, current, tags, commits, add_install=Fal
             # Setup analysis tools and add create their logging files.
             with _create_log_file(project_path, commit.sha, "tacoco") as tacoco_log, _create_log_file(project_path, commit.sha, "builder") as builder_log:
 
-                builder = ProjectBuilder.get_builder(repo) \
-                    .set_log_path(builder_log)
+                try:
+                    builder = ProjectBuilder.get_builder(repo) \
+                        .set_log_path(builder_log)
+                except:
+                    logger.error("Project builder not found: %s", commit.sha)
+                    continue
 
                 tacoco_runner = TacocoRunner(repo, output_path, Config.TACOCO_HOME, log_file=tacoco_log)
                 parser_runner = MethodParserRunner(repo, output_path, Config.PARSER_HOME)
@@ -90,7 +94,6 @@ def _analysis(repo: AnalysisRepo, builder: ProjectBuilder, tacoco_runner: Tacoco
     # Before each analysis remove all generated files of previous run
     repo.clean()
 
-    # Combine data
     commit: Commit = repo.get_current_commit()
     output_path = output_path / repo.get_project_name() / commit.sha
 

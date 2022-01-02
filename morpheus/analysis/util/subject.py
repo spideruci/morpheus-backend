@@ -3,7 +3,7 @@ import tempfile
 import shutil
 import os
 from subprocess import Popen
-from typing import Dict
+from typing import Dict, Iterator
 from morpheus.database.models.repository import Commit
 
 class AnalysisRepo(object):
@@ -77,7 +77,7 @@ class AnalysisRepo(object):
         else:
             return project_name
 
-    def iterate_tagged_commits(self, max_commits=-1) -> Tag:
+    def iterate_tagged_commits(self, max_commits=-1) -> Iterator[Commit]:
 
         for i, tag in enumerate(reversed(self.repo.tags)):
             self.checkout(tag)
@@ -86,7 +86,7 @@ class AnalysisRepo(object):
             if i >= max_commits -1 and max_commits != -1:
                 break
 
-    def iterate_commits(self, max_commits=-1) -> Tag:
+    def iterate_commits(self, max_commits=-1) -> Iterator[Commit]:
         """
         yield current commit, however iterate only through master branch.
         """
