@@ -74,65 +74,64 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
             Session.commit()
 
         for (commit_sha, commit_path) in tqdm(get_directories(project_path)):
-            logger.info(f"Start storing commit '{commit_sha}'/{commit_path}")
-
-            # Store Commit
-            commit_json = load_json(commit_path / 'commits.json')
-            commit = Commit(**commit_json, project_id=project.id)
-
-            Session.add(commit)
-            Session.commit()
-
-            parsed_methods = []
-            parsed_coverage = []
             try:
-                #  Parse Methods
-                methods_file = commit_path / 'methods.json'
-                tacoco_file = commit_path / 'coverage-cov-matrix.json'
-
-                logger.debug("Parse methods/tacoco json: %s %s", methods_file, tacoco_file)
-
-                methods_json = load_json(methods_file)
-                parsed_methods = MethodParser()\
-                    .parse(methods_json)
-
-                coverage_json = load_json(tacoco_file)
-                parsed_coverage =  TacocoParser()\
-                    .parse(coverage_json)
-
-            except RuntimeError:
-                logger.critical("Failing to parse tacoco/methods file - commit: %s", commit.id)
-                Session.delete(commit)
-                Session.flush()
-                del parsed_methods
-                del parsed_coverage
+                analyze_commit(Session, project, commit_sha, commit_path)
+            except:
+                logger.error("Failed to store commit %s in database", commit_sha)
                 continue
-            finally:
-                # Clean up stored data to reduce memory consumption
-                del methods_json
-                del coverage_json
 
-            #  Parse Coverage.
-            try:
-                MethodParser().store(
-                    session=Session,
-                    project=project,
-                    commit=commit,
-                    methods=parsed_methods
-                )
 
-                TacocoParser().store(
-                    session=Session,
-                    project=project,
-                    commit=commit,
-                    coverage=parsed_coverage
-                )
-            except RuntimeError as exc:
-                logger.critical("%s", exc)
-                Session.delete(commit)
-                Session.flush()
-                continue
-            finally:
-                # Clean up stored data to reduce memory consumption
-                del parsed_methods
-                del parsed_coverage
+def analyze_commit(Session, project: Project, commit_sha: str, commit_path: Path):
+    logger.info(f"Start storing commit '{commit_sha}'/{commit_path}")
+
+    # Store Commit
+    commit_json = load_json(commit_path / 'commits.json')
+    commit = Commit(**commit_json, project_id=project.id)
+
+    Session.add(commit)
+    Session.commit()
+
+    parsed_methods = []
+    parsed_coverage = []
+    
+    #  Parse Methods
+    try:
+        methods_file = commit_path / 'methods.json'
+        tacoco_file = commit_path / 'coverage-cov-matrix.json'
+
+        logger.debug("Parse methods/tacoco json: %s %s", methods_file, tacoco_file)
+
+        methods_json = load_json(methods_file)
+        parsed_methods = MethodParser()\
+            .parse(methods_json)
+
+        coverage_json = load_json(tacoco_file)
+        parsed_coverage =  TacocoParser()\
+            .parse(coverage_json)
+
+    except RuntimeError:
+        logger.critical("Failing to parse tacoco/methods file - commit: %s", commit.id)
+        Session.delete(commit)
+        Session.flush()
+        raise
+
+    #  Parse Coverage.
+    try:
+        MethodParser().store(
+            session=Session,
+            project=project,
+            commit=commit,
+            methods=parsed_methods
+        )
+
+        TacocoParser().store(
+            session=Session,
+            project=project,
+            commit=commit,
+            coverage=parsed_coverage
+        )
+    except RuntimeError as exc:
+        logger.critical("Failed to store data in database - commit: %s, Exception: %s", commit.id, exc)
+        Session.delete(commit)
+        Session.flush()
+        raise
