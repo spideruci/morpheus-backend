@@ -1,5 +1,5 @@
 from morpheus.database.models.methods import ProdMethod, ProdMethodVersion
-from morpheus.database.models.repository import Commit
+from morpheus.database.models.repository import Commit, Project
 from typing import Dict, List, Tuple
 import logging
 
@@ -30,13 +30,13 @@ class MethodParser():
         methods_dict = list(filter(test_filter, methods_dict))
         return list(map(lambda method_dict : self.__parse_single_method(method_dict), methods_dict))
 
-    def store(self, session, project, commit, methods: List[ProdMethod]):
+    def store(self, session, project: Project, commit: Commit, methods: List[Tuple[ProdMethod, ProdMethodVersion]]):
         method_count = session.query(ProdMethod).count()
         logger.info('Number of methods stored in DB: %s', method_count)
         logger.info('Number of methods in commit: %s', len(methods))
 
         for method, _ in methods:
-            method.project_id = project.id
+            method.project_id = project.id # type: ignore
 
             if (method_id := session.query(ProdMethod.id) \
                 .filter(
@@ -58,8 +58,8 @@ class MethodParser():
                 logger.error("Method not stored in database %s.%s.%s project_id: %s", method.package_name, method.class_name, method.method_decl, method.project_id)
                 continue
 
-            version.method_id = method.id
-            version.commit_id = commit.id
+            version.method_id = method.id # type: ignore
+            version.commit_id = commit.id # type: ignore
 
             session.add(version)
 

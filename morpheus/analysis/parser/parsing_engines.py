@@ -1,6 +1,7 @@
 import re
 from enum import Enum
 import logging
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ def determine_parsing_engine(test_string: str) -> TestEngine:
             return TestEngine.NOENGINE
         
 
-def parse_tacoco_test_string(test_string: str):
+def parse_tacoco_test_string(test_string: str) -> Tuple[str, str, str, bool]:
     engine = determine_parsing_engine(test_string)
 
     (package_name, class_name) = __parse_package_name(engine, test_string)
@@ -38,7 +39,7 @@ def parse_tacoco_test_string(test_string: str):
     return package_name, class_name, method_name, is_passing
 
 def __parse_package_name(engine, test_method):
-    path = ''
+    path: str = ''
     nested = None
     match engine:
         case TestEngine.JUPITER:
@@ -108,6 +109,6 @@ def __parse_method_name(engine, test_method):
 
     raise Exception("Unable to parse method")
 
-def __is_passing_test(test_method):
+def __is_passing_test(test_method) -> bool:
     # Parse if test passed or failed
     return re.search(r'(_F$)', test_method) is None

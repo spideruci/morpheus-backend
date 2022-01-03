@@ -12,7 +12,7 @@ from morpheus.analysis.util.memoize import memoize
 logger = logging.getLogger(__name__)
 
 class TacocoParser():
-    def parse(self, tacoco_dict: Dict) -> List[Tuple[TestMethod, LineCoverage]]:
+    def parse(self, tacoco_dict: Dict) -> List[Tuple[TestMethod, List[LineCoverage]]]:
         logger.info("Start parsing tacoco data...")
 
         if tacoco_dict.get('testCount', 0) <= 1:
@@ -20,7 +20,7 @@ class TacocoParser():
             raise RuntimeError("Bad coverage file")
 
         # Testcases
-        test_map: Dict[int, Tuple[TestMethod, str]] = {}
+        test_map: Dict[int, Tuple[TestMethod, bool]] = {}
         if 'testsIndex' in tacoco_dict:
             for idx, test_string in enumerate(tacoco_dict['testsIndex']):
                 try:
@@ -68,24 +68,25 @@ class TacocoParser():
         # Merge to dictionaries and return a list of tuples
         def _merge(idx) -> Tuple[TestMethod, List[LineCoverage]]:
             test : TestMethod
-            result: str
-            
+            test_result: bool
+
             if idx in test_map and idx in coverage:
-                test, result = test_map[idx]
+                test, test_result = test_map[idx]
                 line_coverage: List[LineCoverage] = coverage[idx]
 
                 for line in line_coverage: 
-                    line.test_result = result
+                    line.test_result = test_result # type: ignore
 
                 return test, line_coverage
-            
-        result = list(map(_merge, coverage.keys()))
-        logger.debug("Number of tests %s", len(result))
 
-        logger.info("Finished parsing tacoco data...")
-        return result
+            raise RuntimeError("Index not found in method")
 
-    def __parse_test_method(self, test_method: str) -> Tuple[TestMethod, str]:
+        test_coverage_map: List[Tuple[TestMethod, List[LineCoverage]]] = list(map(_merge, coverage.keys()))
+        logger.debug("Finished parsing - total testcases:  %s", len(test_coverage_map))
+
+        return test_coverage_map
+
+    def __parse_test_method(self, test_method: str) -> Tuple[TestMethod, bool]:
         try:
             (package_name, class_name, method_name, is_passing) = parse_tacoco_test_string(test_method)
         except:
@@ -104,7 +105,7 @@ class TacocoParser():
 
         start_time = timeit.default_timer()
         for test, _ in coverage:
-            test.project_id = project.id
+            test.project_id = project.id # type: ignore
 
             if (test_id := session.query(TestMethod.id)\
                 .filter(
@@ -154,8 +155,8 @@ class TacocoParser():
                     except:
                         raise
 
-                    line.commit_id = commit.id
-                    line.test_id = test.id
+                    line.commit_id = commit.id # type: ignore
+                    line.test_id = test.id # type: ignore
                     line.method_version_id = method_version_id
 
                     # if line.commit_id == 2 and line.test_id == 1 and line.method_version_id == 114  and line.line_number == 119:

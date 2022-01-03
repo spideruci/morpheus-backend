@@ -28,7 +28,7 @@ def get_directories(root_path) -> list[tuple[str, Path]]:
 
     return projects
 
-def load_json(path) -> List[Dict]:
+def load_json(path):
     with open(path) as f:
         return json.load(f)
 
