@@ -27,8 +27,13 @@ class MethodParser():
 
     def parse(self, methods_dict: List[Dict]) -> List[Tuple[ProdMethod, ProdMethodVersion]]:
         test_filter = lambda m: not "test" in m["filePath"]
-        methods_dict = list(filter(test_filter, methods_dict))
-        return list(map(lambda method_dict : self.__parse_single_method(method_dict), methods_dict))
+        methods = list(filter(test_filter, methods_dict))
+
+        if not methods:
+            logger.error("Zero methods founds")
+            raise RuntimeError("Zero methods found...")
+
+        return list(map(lambda method_dict : self.__parse_single_method(method_dict), methods))
 
     def store(self, session, project: Project, commit: Commit, methods: List[Tuple[ProdMethod, ProdMethodVersion]]):
         method_count = session.query(ProdMethod).count()

@@ -80,10 +80,6 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
             commit_json = load_json(commit_path / 'commits.json')
             commit = Commit(**commit_json, project_id=project.id)
 
-            if Session.query(Project).filter(Project.project_name==project_name).first() is not None:
-                logger.warning(f"SKIP - Commit '{commit_sha}' of project'{project_name}' is already in the database.")
-                continue
-
             Session.add(commit)
             Session.commit()
 

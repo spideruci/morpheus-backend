@@ -84,6 +84,10 @@ class TacocoParser():
         test_coverage_map: List[Tuple[TestMethod, List[LineCoverage]]] = list(map(_merge, coverage.keys()))
         logger.debug("Finished parsing - total testcases:  %s", len(test_coverage_map))
 
+        if not test_coverage_map:
+            logger.error("No test found by tacoco.")
+            raise RuntimeError("No tests found by tacoco.")
+
         return test_coverage_map
 
     def __parse_test_method(self, test_method: str) -> Tuple[TestMethod, bool]:

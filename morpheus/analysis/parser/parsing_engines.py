@@ -5,17 +5,18 @@ from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
+
 class TestEngine(Enum):
     JUPITER   = 'junit-jupiter',
     VINTAGE   = 'junit-vintage',
     TESTNG    = 'testng',
     NOENGINE  = 'noengine',
 
+
 def determine_parsing_engine(test_string: str) -> TestEngine:
     match_result = re.search(r'engine:([a-zA-Z]+-*[a-zA-Z]+)', test_string)
 
     if match_result is None:
-        logger.warning("unable to find engine: %s", test_string)
         return TestEngine.NOENGINE
 
     engine = match_result.group(1)
@@ -37,6 +38,7 @@ def parse_tacoco_test_string(test_string: str) -> Tuple[str, str, str, bool]:
     is_passing = __is_passing_test(test_string)
 
     return package_name, class_name, method_name, is_passing
+
 
 def __parse_package_name(engine, test_method):
     path: str = ''
@@ -66,6 +68,7 @@ def __parse_package_name(engine, test_method):
         class_name = f"{split_path[-1]}{nested}"
     package_name = '.'.join(split_path[0:len(split_path)-1])
     return package_name, class_name
+
 
 def __parse_method_name(engine, test_method):
     method_name = None
@@ -108,6 +111,7 @@ def __parse_method_name(engine, test_method):
                 return f"{result.group(1)}"
 
     raise Exception("Unable to parse method")
+
 
 def __is_passing_test(test_method) -> bool:
     # Parse if test passed or failed
