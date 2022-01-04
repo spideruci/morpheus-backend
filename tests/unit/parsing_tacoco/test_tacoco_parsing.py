@@ -7,7 +7,7 @@ from morpheus.commands.db import load_json
 class TacocoParsingTest(unittest.TestCase):
 
     def test_parsing_jpacman(self):
-        tacoco_file = Path('./tests/unit/parsing_tacoco/resources/jpacman-coverage-cov-matrix.json')
+        tacoco_file = Path('./tests/resources/jpacman-coverage-cov-matrix.json')
         tacoco_coverage = load_json(tacoco_file)
 
         coverage = TacocoParser() \

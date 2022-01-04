@@ -11,6 +11,7 @@ from morpheus.analysis.util.memoize import memoize
 
 logger = logging.getLogger(__name__)
 
+
 class TacocoParser():
     def parse(self, tacoco_dict: Dict) -> List[Tuple[TestMethod, List[LineCoverage]]]:
         logger.info("Start parsing tacoco data...")
@@ -26,7 +27,7 @@ class TacocoParser():
                 try:
                     test, result = self.__parse_test_method(test_string)
                 except:
-                    logger.error("Failed parsing: %s %s", idx, test_string)
+                    logger.warning("Failed parsing: %s %s", idx, test_string)
                     continue        
                 test_map[idx] = (test, result)
         
@@ -94,7 +95,7 @@ class TacocoParser():
         try:
             (package_name, class_name, method_name, is_passing) = parse_tacoco_test_string(test_method)
         except:
-            logger.error("method_name error: %s", test_method)
+            logger.debug("method_name error: %s", test_method)
             raise Exception("[ERROR] method_name error: {}".format(test_method))
 
         test = TestMethod(package_name=package_name ,class_name=class_name, method_name=method_name)
@@ -166,7 +167,7 @@ class TacocoParser():
                     # if line.commit_id == 2 and line.test_id == 1 and line.method_version_id == 114  and line.line_number == 119:
                     #     logger.debug("Test: %s, %s, %s, %s", test.id, test.method_name, test.class_name, test.package_name)
 
-                    session.add(line)
+                session.bulk_save_objects(lines)
         except exc.IntegrityError as e:
             logger.error(e)
 

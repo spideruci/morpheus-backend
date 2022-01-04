@@ -63,25 +63,28 @@ def create_database(input_directory, database_path: Path, is_single_project: boo
 
     # Iterate over project and directory name tuple
     for (project_name, project_path) in tqdm(projects):
-        logger.info(f"Start storing project '{project_name}' in database.")
-
-        # Store Project
-        project_json = load_json( project_path / 'project.json')
-        project = Project(**project_json)
-
-        if Session.query(Project).filter(Project.project_name==project_name).first() is None:
-            Session.add(project)
-            Session.commit()
-
-        for (commit_sha, commit_path) in tqdm(get_directories(project_path)):
-            try:
-                analyze_commit(Session, project, commit_sha, commit_path)
-            except:
-                logger.error("Failed to store commit %s in database", commit_sha)
-                continue
+        add_project(Session, project_name, project_path)
 
 
-def analyze_commit(Session, project: Project, commit_sha: str, commit_path: Path):
+def add_project(Session, project_name, project_path):
+    logger.info(f"Start storing project '{project_name}' in database.")
+
+    # Store Project
+    project_json = load_json( project_path / 'project.json')
+    project = Project(**project_json)
+
+    if Session.query(Project).filter(Project.project_name==project_name).first() is None:
+        Session.add(project)
+        Session.commit()
+
+    for (commit_sha, commit_path) in tqdm(get_directories(project_path)):
+        try:
+            __analyze_commit(Session, project, commit_sha, commit_path)
+        except:
+            logger.error("Failed to store commit %s in database", commit_sha)
+            continue
+
+def __analyze_commit(Session, project: Project, commit_sha: str, commit_path: Path):
     logger.info(f"Start storing commit '{commit_sha}'/{commit_path}")
 
     # Store Commit
@@ -109,7 +112,7 @@ def analyze_commit(Session, project: Project, commit_sha: str, commit_path: Path
         parsed_coverage =  TacocoParser()\
             .parse(coverage_json)
 
-    except RuntimeError:
+    except:
         logger.critical("Failing to parse tacoco/methods file - commit: %s", commit.id)
         Session.delete(commit)
         Session.flush()
@@ -130,7 +133,8 @@ def analyze_commit(Session, project: Project, commit_sha: str, commit_path: Path
             commit=commit,
             coverage=parsed_coverage
         )
-    except RuntimeError as exc:
+
+    except:
         logger.critical("Failed to store data in database - commit: %s, Exception: %s", commit.id, exc)
         Session.delete(commit)
         Session.flush()

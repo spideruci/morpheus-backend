@@ -43,6 +43,12 @@ class MethodQuery():
         return session.query(ProdMethod)\
             .filter(ProdMethod.id==method_id)\
             .first()
+    
+    @staticmethod
+    def exist(session, method_id):
+        return session.query(ProdMethod.id) \
+            .filter(ProdMethod.id==method_id) \
+            .first()
 
     @staticmethod
     def get_method_versions(session: Session, method_id: int) -> List[ProdMethodVersion]:

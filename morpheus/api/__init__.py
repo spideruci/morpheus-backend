@@ -4,5 +4,5 @@ API_CONSTANTS = {
     'title': 'Morpheus Backend',
     'description': "Backend API that powers the Morpheus visualization.",
     'license': "MIT",
-    'doc': '/doc'
+    'doc': '/api'
 }

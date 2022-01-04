@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from flask_restx.resource import Resource
 from morpheus.api.rest import api
 from morpheus.database.db import get_session
@@ -7,6 +7,8 @@ from morpheus.database.util import row2dict
 from morpheus.database.models.repository import Project, Commit
 from morpheus.database.models.methods import LineCoverage, ProdMethod, ProdMethodVersion, TestMethod
 from morpheus.api.logic.coverage import MethodCoverageQuery, CommitQuery, ProjectQuery, MethodQuery
+
+import time
 
 ns = api.namespace(
     name='coverage',
@@ -37,10 +39,22 @@ class MethodTestCoverageRoute(Resource):
         if commit is None:
             return {"error": f"Commit with id '{commit_id}' was not found..."}, 404
 
+        # tic = time.perf_counter()
         methods = MethodCoverageQuery.get_methods(Session, project, commit)
-        tests = MethodCoverageQuery.get_tests(Session, project, commit)
-        edges = MethodCoverageQuery.get_edges(Session, commit)
+        # toc = time.perf_counter()
+        # method_time = toc - tic
 
+        # tic = time.perf_counter()
+        tests = MethodCoverageQuery.get_tests(Session, project, commit)
+        # toc = time.perf_counter()
+        # tests_time = toc - tic
+        
+        # tic = time.perf_counter()
+        edges = MethodCoverageQuery.get_edges(Session, commit)
+        # toc = time.perf_counter()
+        # edges_time = toc - tic
+
+        # logger.debug("Timing: m:%s t:%s e:%s", method_time, tests_time, edges_time)
         # logger.info("Methods: %s, Tests: %s, Edges: %s", len(methods), len(tests), len(edges))
         return {
             "project": row2dict(project),
@@ -68,8 +82,8 @@ class ProdMethodHistoryRoute(Resource):
 
         commits: List[Commit] = []
 
-        versions: List[ProdMethodVersion] = Session.query(ProdMethodVersion)\
-            .filter(ProdMethodVersion.method_id==method.id)\
+        versions: List[Tuple[int, int]] = Session.query(ProdMethodVersion.id, ProdMethodVersion.commit_id)\
+            .filter(ProdMethodVersion.method_id==method_id)\
             .all()
 
         for version in versions:
@@ -78,7 +92,7 @@ class ProdMethodHistoryRoute(Resource):
         if not commits:
             return {'msg': 'Commits not found...'}, 404
 
-        versions_ids = [version.id for version in versions]
+        versions_ids = [version_id for commit_id, version_id in versions]
         edges = Session.query(LineCoverage.test_id, LineCoverage.commit_id, LineCoverage.test_result) \
             .filter(LineCoverage.method_version_id.in_(versions_ids)) \
             .group_by(LineCoverage.test_id, LineCoverage.method_version_id) \
@@ -155,7 +169,7 @@ class TestMethodHistoryRoute(Resource):
         method_query_result = Session.query(ProdMethod, ProdMethodVersion.id) \
             .join(ProdMethodVersion, ProdMethod.id==ProdMethodVersion.method_id) \
             .filter(ProdMethodVersion.id.in_(unique_method_version_id)) \
-            .group_by(ProdMethod, ProdMethodVersion.id) \
+            .group_by(ProdMethod.id, ProdMethodVersion.id) \
             .all()
 
         methods_version_to_global_id_map = {}
