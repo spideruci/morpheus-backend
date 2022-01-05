@@ -35,7 +35,7 @@ def get_commit_coverage(project_id: int, base_dir: Path):
     coverage = MethodTestCoverageRoute()
 
     commit_list_dir = base_dir / 'projects' / f'{project_id}'
-    commit_coverage_dir = base_dir / 'coverage'  / f'{project_id}'/ 'commits'
+    commit_coverage_dir = base_dir / 'coverage' / 'projects' / f'{project_id}' / 'commits'
 
     for dir in [commit_list_dir, commit_coverage_dir]:
         os.makedirs(dir, exist_ok=True)
@@ -60,7 +60,7 @@ def get_method_coverage(project_id: int, base_dir: Path):
     coverage = ProdMethodHistoryRoute()
 
     method_list_dir = base_dir / 'projects' / f'{project_id}'
-    method_coverage_dir = base_dir / 'coverage' / f'{project_id}' / 'methods'
+    method_coverage_dir = base_dir / 'coverage' / 'projects' / f'{project_id}' / 'methods'
 
     for dir in [method_list_dir, method_coverage_dir]:
         os.makedirs(dir, exist_ok=True)
@@ -86,7 +86,7 @@ def get_test_coverage(project_id: int, base_dir: Path):
     coverage = TestMethodHistoryRoute()
 
     test_list_dir = base_dir / 'projects' / f'{project_id}'
-    test_coverage_dir = base_dir / 'coverage' / f'{project_id}' / 'tests'
+    test_coverage_dir = base_dir / 'coverage' / 'projects' / f'{project_id}' / 'tests'
 
     for dir in [test_list_dir, test_coverage_dir]:
         os.makedirs(dir, exist_ok=True)

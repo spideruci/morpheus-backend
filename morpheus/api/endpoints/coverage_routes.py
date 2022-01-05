@@ -86,24 +86,27 @@ class ProdMethodHistoryRoute(Resource):
             .filter(ProdMethodVersion.method_id==method_id)\
             .all()
 
-        for version in versions:
-            commits.append(CommitQuery.get_commit(Session, version.commit_id))
+        for _, commit_id in versions:
+            commits.append(CommitQuery.get_commit(Session, commit_id))
+
 
         if not commits:
             return {'msg': 'Commits not found...'}, 404
 
-        versions_ids = [version_id for commit_id, version_id in versions]
+        versions_ids = [version_id for version_id, _ in versions]
         edges = Session.query(LineCoverage.test_id, LineCoverage.commit_id, LineCoverage.test_result) \
             .filter(LineCoverage.method_version_id.in_(versions_ids)) \
-            .group_by(LineCoverage.test_id, LineCoverage.method_version_id) \
             .all()
 
+        logger.debug("Edges: %s", edges)
         edges_formatted = [{'test_id': test_id, 'commit_id': commit_id, 'test_result': test_result} for test_id, commit_id, test_result in edges]
 
         if not edges:
             return {'msg': 'Method is not covered by any test case.'}, 404
         
         test_ids = set(map(lambda edge: edge[0], edges))
+
+        logger.info("%s", test_ids)
 
         tests = Session.query(TestMethod) \
             .filter(TestMethod.project_id == project_id)\
