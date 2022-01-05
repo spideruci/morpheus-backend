@@ -144,6 +144,7 @@ class TacocoParser():
                     ).first()
 
         try:
+            lines_to_store = []
             for test, lines in coverage:
                 if test.id is None:
                     logger.error("Test not stored in database %s.%s.%s project_id: %s", test.package_name, test.class_name, test.method_name, test.project_id)
@@ -164,10 +165,11 @@ class TacocoParser():
                     line.test_id = test.id # type: ignore
                     line.method_version_id = method_version_id
 
+                    lines_to_store.append(line)
+
                     # if line.commit_id == 2 and line.test_id == 1 and line.method_version_id == 114  and line.line_number == 119:
                     #     logger.debug("Test: %s, %s, %s, %s", test.id, test.method_name, test.class_name, test.package_name)
-
-                session.bulk_save_objects(lines)
+            session.bulk_save_objects(lines_to_store)
         except exc.IntegrityError as e:
             logger.error(e)
 

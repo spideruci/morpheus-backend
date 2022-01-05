@@ -23,9 +23,9 @@ class ProdMethodVersion(Base):
     id = Column(Integer, primary_key=True)
     method_id = Column(Integer, ForeignKey('prodmethods.id'), index=True, nullable=False)
     commit_id = Column(Integer, ForeignKey('commits.id'), index=True, nullable=False)
-    line_start = Column(Integer, nullable=False)
-    line_end = Column(Integer, nullable=False)
-    file_path = Column(String, nullable=False)
+    line_start = Column(Integer, nullable=False, index=True)
+    line_end = Column(Integer, nullable=False, index=True)
+    file_path = Column(String, nullable=False, index=True)
 
     UniqueConstraint(method_id, commit_id, file_path)
 
@@ -48,9 +48,9 @@ class LineCoverage(Base):
     __tablename__ = 'linecoverage'
 
     id = Column(Integer, primary_key=True)
-    commit_id = Column(Integer, ForeignKey('commits.id'), index=True)
-    test_id = Column(Integer, ForeignKey('testcases.id'), index=True)
-    method_version_id = Column(Integer, ForeignKey('method_versions.id'), index=True)
+    commit_id = Column(Integer, nullable=False, index=True)
+    test_id = Column(Integer, nullable=False, index=True)
+    method_version_id = Column(Integer, nullable=False, index=True)
     test_result = Column(Boolean, nullable=False)
     full_name = Column(String, nullable=False)
     line_number = Column(Integer, nullable=False)

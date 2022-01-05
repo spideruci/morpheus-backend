@@ -18,6 +18,7 @@ ns = api.namespace(
 
 logger = logging.getLogger(__name__)
 
+
 ############################################################### 
 # Coverage routes
 # - Methods v. Tests (given commit)
@@ -66,6 +67,7 @@ class MethodTestCoverageRoute(Resource):
             }
         }, 200
 
+
 @ns.route('/projects/<project_id>/methods/<method_id>')
 class ProdMethodHistoryRoute(Resource):
     @ns.response(200, 'Success')
@@ -98,15 +100,12 @@ class ProdMethodHistoryRoute(Resource):
             .filter(LineCoverage.method_version_id.in_(versions_ids)) \
             .all()
 
-        logger.debug("Edges: %s", edges)
         edges_formatted = [{'test_id': test_id, 'commit_id': commit_id, 'test_result': test_result} for test_id, commit_id, test_result in edges]
 
         if not edges:
             return {'msg': 'Method is not covered by any test case.'}, 404
         
         test_ids = set(map(lambda edge: edge[0], edges))
-
-        logger.info("%s", test_ids)
 
         tests = Session.query(TestMethod) \
             .filter(TestMethod.project_id == project_id)\
@@ -122,6 +121,7 @@ class ProdMethodHistoryRoute(Resource):
                 "edges": edges_formatted
             }
         }, 200
+
 
 @ns.route('/projects/<project_id>/tests/<test_id>')
 class TestMethodHistoryRoute(Resource):
@@ -146,10 +146,7 @@ class TestMethodHistoryRoute(Resource):
 
         # Covered lines, but filtered to method and commit (so per pair only one covered line)
         edges: List[Dict] = Session.query(LineCoverage.commit_id, LineCoverage.method_version_id, LineCoverage.test_result) \
-            .filter(
-                LineCoverage.test_id == test.id,
-                LineCoverage.method_version_id !=  None
-            ) \
+            .filter(LineCoverage.test_id == test.id) \
             .group_by(LineCoverage.method_version_id, LineCoverage.commit_id) \
             .all()
 
