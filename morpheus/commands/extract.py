@@ -152,3 +152,6 @@ def extract_coverage(database: Path, output_path: Path):
     # Exectute all the tasks one by one using all cpus:
     with Pool() as p:
         p.map(execute_task, tasks)
+
+    logger.info("Finished extracting data")
+
