@@ -2,11 +2,24 @@
 
 ## Install
 
-To work sqlite3 and python3.10 needs to be installed.
+Requirements:
+- python3.10
+- sqlite3
+
+Steps to install tools
 ```
 python3 -m virtualenv venv/ -p <path-to-python3.10>
 pip install -e .
 ```
+
+To gather data also the following two tools need to be installed and provided in the configured in the [`.env` config file](.env):
+- [tacoco](https://github.com/spideruci/tacoco/): follow instructions in repo to make sure it can compile
+- [java-method-parser](https://github.com/kajdreef/java-method-parser)
+- java jdk 8 or above
+- maven
+- (and gradel if you want to analyze gradle projects)
+
+Note: Tacoco makes use of [Primitive-Hamcrest](https://github.com/spideruci/primitive-hamcrest) make sure to clone this project and run `mvn install` so it is installed for tacoco.
 
 ## Usage
 After installing the tool can be run using just the `matrix` command.
@@ -28,7 +41,7 @@ options:
   -h, --help            show this help message and exit
 ```
 
-NOTES:
+NOTES for the analyze commands:
 - Location of analysis tools, [Tacoco](https://github.com/spideruci/tacoco/) and [java method parser](https://github.com/kajdreef/java-method-parser), are configured in the `.env` file.
 
 ### analyze
@@ -50,8 +63,6 @@ Turning the database into static json files
 ### server
 
 `matrix server ./history-jpacman-framework.sqlite --port 8080 --host 127.0.0.1`
-
-
 
 ## ToDo:
 - Automaticaly remove unnecessary files:
