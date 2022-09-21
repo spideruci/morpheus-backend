@@ -17,7 +17,7 @@ ns = api.namespace(
 #  - Obtain all tests within a single project
 ################################################################
 
-@ns.route('/<test_id>')
+@ns.route('/<test_id>', '/<test_id>/')
 class SingleTestMethodRoute(Resource):
     
     @ns.response(200, 'Success')
@@ -33,7 +33,7 @@ class SingleTestMethodRoute(Resource):
         return {"test": row2dict(test)}, 200
 
 
-@ns.route('/project/<project_id>/')
+@ns.route('/project/<project_id>', '/project/<project_id>/')
 class TestMethodsInCommitRoute(Resource):
     
     @ns.response(200, 'Success')

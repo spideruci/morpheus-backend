@@ -1,5 +1,5 @@
 import logging
-from morpheus import __name__, __version__
+from morpheus import __name__ as __tool_name__, __version__
 from pathlib import Path
 from argparse import ArgumentParser
 from morpheus.commands.analysis import run_analysis
@@ -8,7 +8,7 @@ from morpheus.commands.db import create_database
 from morpheus.commands.extract import extract_coverage
 from ipaddress import IPv4Address, ip_address
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__tool_name__)
 
 def init_logger(logging_level=logging.DEBUG):
     logging.basicConfig(
@@ -23,7 +23,7 @@ def parse_arguments():
     """
     parser = ArgumentParser(prog="Matrix", description="Collection of tools used to analyze, store, and serve the historical coverage data for the morpheus visualization.")
 
-    parser.add_argument('-v', '--version', action='version', version=f"{__name__}: v{__version__}")
+    parser.add_argument('-v', '--version', action='version', version=f"{__tool_name__}: v{__version__}")
 
     subparsers = parser.add_subparsers()
     # -------------------------------------------
@@ -101,6 +101,7 @@ def main():
     init_logger()
 
     args.func(args)
+
 
 if __name__ == "__main__":
     main()

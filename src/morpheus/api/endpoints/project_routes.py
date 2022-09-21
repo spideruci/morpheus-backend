@@ -14,7 +14,7 @@ ns = api.namespace(
 ################################################################ 
 # Projects routes
 ################################################################ 
-@ns.route('/')
+@ns.route('', '/')
 class ProjectsRoute(Resource):
 
     @ns.doc(description="Obtain all projects.")
@@ -29,7 +29,7 @@ class ProjectsRoute(Resource):
 
         return {"projects": list(map(row2dict, projects))}, 200
 
-@ns.route('/<project_id>')
+@ns.route('/<project_id>', '/<project_id>/')
 class ProjectRoute(Resource):
 
     @ns.doc(description="Get single project.", params={'project_id': 'Project identifier'})
@@ -59,7 +59,7 @@ class ProjectRoute(Resource):
 ################################################################ 
 # Commits routes
 ################################################################ 
-@ns.route('/<project_id>/commits')
+@ns.route('/<project_id>/commits', '/<project_id>/commits/')
 @ns.doc(
         description='Retrieve all commits for given project id',
         param={'project_id': 'Project identifier'}
@@ -79,7 +79,7 @@ class CommitsRoute(Resource):
 
         return {"commits": list(map(row2dict, commits))}, 200
 
-@ns.route('/<project_id>/commits/<commit_id>')
+@ns.route('/<project_id>/commits/<commit_id>', '/<project_id>/commits/<commit_id>/')
 @ns.doc(
     description='Retrieve a specific commit',
     param={

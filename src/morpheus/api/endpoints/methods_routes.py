@@ -18,7 +18,7 @@ ns = api.namespace(
 # Methods routes
 ################################################################
 
-@ns.route('/<method_id>')
+@ns.route('/<method_id>', '/<method_id>/')
 class SingleMethodRoute(Resource):
     
     @ns.response(200, 'Success')
@@ -34,7 +34,7 @@ class SingleMethodRoute(Resource):
 
         return {"method": row2dict(method)}, 200
 
-@ns.route('/project/<project_id>/')
+@ns.route('/project/<project_id>', '/project/<project_id>/')
 class MethodsInProjectRoute(Resource):
     
     @ns.response(200, 'Success')
@@ -55,7 +55,7 @@ class MethodsInProjectRoute(Resource):
             "methods": list(map(row2dict, methods)),
         }, 200
 
-@ns.route('/project/<project_id>/commits/<commit_id>/')
+@ns.route('/project/<project_id>/commits/<commit_id>', '/project/<project_id>/commits/<commit_id>/')
 class MethodsInCommitRoute(Resource):
     
     @ns.response(200, 'Success')

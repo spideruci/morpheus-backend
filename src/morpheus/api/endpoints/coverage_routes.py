@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 # - Methods v. Commits (given tests)
 ###############################################################
 
-@ns.route('/projects/<project_id>/commits/<commit_id>')
+@ns.route('/projects/<project_id>/commits/<commit_id>', '/projects/<project_id>/commits/<commit_id>/')
 class MethodTestCoverageRoute(Resource):
     def get(self, project_id, commit_id):
         Session = get_session()
@@ -68,7 +68,7 @@ class MethodTestCoverageRoute(Resource):
         }, 200
 
 
-@ns.route('/projects/<project_id>/methods/<method_id>')
+@ns.route('/projects/<project_id>/methods/<method_id>', '/projects/<project_id>/methods/<method_id>/')
 class ProdMethodHistoryRoute(Resource):
     @ns.response(200, 'Success')
     @ns.response(404, 'Method not found.')
@@ -123,7 +123,7 @@ class ProdMethodHistoryRoute(Resource):
         }, 200
 
 
-@ns.route('/projects/<project_id>/tests/<test_id>')
+@ns.route('/projects/<project_id>/tests/<test_id>', '/projects/<project_id>/tests/<test_id>/')
 class TestMethodHistoryRoute(Resource):
     @ns.response(200, 'Success')
     @ns.response(404, 'Test not found.')

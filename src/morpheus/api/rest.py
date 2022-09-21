@@ -1,4 +1,5 @@
 import logging
+from flask import Blueprint
 from flask_restx import Api
 from . import API_CONSTANTS
 from sqlalchemy.orm.exc import NoResultFound
@@ -6,6 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 logger = logging.getLogger(__name__)
 
 api: Api = Api(**API_CONSTANTS)
+
 
 @api.errorhandler
 def default_error_handler(e):
