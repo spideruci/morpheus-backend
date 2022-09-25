@@ -18,7 +18,7 @@ def create_morpheus_backend(database: Path):
     """Initialize the server with all the REST endpoints"""
     app =  Flask(__name__)
     CORS(app)
-    
+
     Config.DATABASE_PATH = database.resolve()
     (engine, Session) = create_engine_and_session()
     init_db(engine)
@@ -47,3 +47,9 @@ def start_morpheus_backend(database: Path, host, port, debug=True):
         port=port,
         debug=debug
     )
+
+def start_gunicorn(database):
+    """Start morpheus server using gunicorn"""
+
+    database_path = Path(database)
+    return create_morpheus_backend(database_path)
