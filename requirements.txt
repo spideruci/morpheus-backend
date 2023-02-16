@@ -9,7 +9,7 @@ tqdm==4.62.3
 MarkupSafe==2.0.1
 jinja2==2.11.3
 itsdangerous==1.1.0
-werkzeug==1.0.1
+werkzeug==2.2.3
 
 # Used for production
 gunicorn==20.1.0

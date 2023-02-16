@@ -12,7 +12,7 @@ setup(
     install_requires = [
         'jinja2==2.11.3',
         'itsdangerous==1.1.0',
-        'werkzeug==1.0.1',
+        'werkzeug==2.2.3',
         'pyyaml==5.4',
         'GitPython==3.1',
         'flask==1.1.4',
